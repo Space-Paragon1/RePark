@@ -51,3 +51,71 @@ export const vehiclesApi = {
   create: (data: VehicleCreate) => request<Vehicle>('POST', '/vehicles', data),
   delete: (id: string) => request<void>('DELETE', `/vehicles/${id}`),
 };
+
+// ─── Reports ──────────────────────────────────────────────────────────────────
+
+export type IssueType =
+  | 'blocking_driveway'
+  | 'construction_access'
+  | 'garbage_pickup'
+  | 'restricted_zone'
+  | 'emergency_access';
+
+export type ReportCreate = {
+  plate_number: string;
+  latitude: number;
+  longitude: number;
+  issue_type: IssueType;
+  message?: string;
+};
+
+export type Report = {
+  id: string;
+  plate_number: string;
+  issue_type: IssueType;
+  status: string;
+  owner_notified: boolean;
+  created_at: string;
+};
+
+export const reportsApi = {
+  create: (data: ReportCreate) => request<Report>('POST', '/reports', data),
+  list: () => request<Report[]>('GET', '/reports'),
+  get: (id: string) => request<Report>('GET', `/reports/${id}`),
+};
+
+// ─── Alerts ───────────────────────────────────────────────────────────────────
+
+export type OwnerResponseType =
+  | 'moving_now'
+  | 'already_moved'
+  | 'incorrect_report'
+  | 'abuse_reported';
+
+export type AlertDetail = {
+  id: string;
+  vehicle_id: string;
+  report_id: string;
+  delivery_status: string;
+  owner_response: OwnerResponseType | null;
+  responded_at: string | null;
+  created_at: string;
+  plate_number: string;
+  make: string;
+  model: string;
+  color: string;
+  issue_type: IssueType;
+  reported_at: string;
+};
+
+export const alertsApi = {
+  list: () => request<AlertDetail[]>('GET', '/alerts'),
+  respond: (id: string, response: OwnerResponseType) =>
+    request<AlertDetail>('POST', `/alerts/${id}/respond`, { response }),
+};
+
+// ─── Push Tokens ──────────────────────────────────────────────────────────────
+
+export const pushTokensApi = {
+  register: (token: string) => request<void>('POST', '/push-tokens', { token }),
+};
