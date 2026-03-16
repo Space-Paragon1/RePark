@@ -45,6 +45,34 @@ async def db_select(table: str, filters: dict) -> list[dict]:
     return r.json()
 
 
+async def db_query(table: str, params: dict[str, str]) -> list[dict]:
+    """Flexible query — values must include the PostgREST operator prefix.
+
+    e.g. {"user_id": "eq.abc", "created_at": "gte.2024-01-01T00:00:00Z"}
+    """
+    async with httpx.AsyncClient() as client:
+        r = await client.get(
+            f"{POSTGREST_URL}/{table}",
+            headers=_headers({"Prefer": ""}),
+            params=params,
+        )
+    r.raise_for_status()
+    return r.json()
+
+
+async def db_update(table: str, filters: dict, data: dict) -> list[dict]:
+    params = {k: f"eq.{v}" for k, v in filters.items()}
+    async with httpx.AsyncClient() as client:
+        r = await client.patch(
+            f"{POSTGREST_URL}/{table}",
+            headers=_headers(),
+            params=params,
+            json=data,
+        )
+    r.raise_for_status()
+    return r.json()
+
+
 async def db_delete(table: str, filters: dict) -> None:
     params = {k: f"eq.{v}" for k, v in filters.items()}
     async with httpx.AsyncClient() as client:
