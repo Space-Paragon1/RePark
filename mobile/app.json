@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "RePark",
+    "slug": "repark",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "repark",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.repark.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "RePark needs your location to verify you are near the vehicle you are reporting."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.repark.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "RePark needs your location to verify you are near the vehicle you are reporting."
+        }
+      ],
+      "expo-asset",
+      "expo-font",
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
