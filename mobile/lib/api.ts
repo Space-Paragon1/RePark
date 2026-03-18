@@ -119,3 +119,10 @@ export const alertsApi = {
 export const pushTokensApi = {
   register: (token: string) => request<void>('POST', '/push-tokens', { token }),
 };
+
+// ─── Account ──────────────────────────────────────────────────────────────────
+
+export const accountApi = {
+  export: () => request<Record<string, unknown>>('GET', '/account/export'),
+  delete: () => request<void>('DELETE', '/account'),
+};

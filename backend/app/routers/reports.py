@@ -7,6 +7,9 @@ from app.dependencies.auth import get_current_user
 from app.schemas.reports import ReportCreate, ReportResponse
 from app.services.push import send_push_notifications
 
+ABUSE_BLOCK_THRESHOLD = 5
+ABUSE_WINDOW_HOURS = 24
+
 router = APIRouter(prefix="/reports", tags=["reports"])
 
 RATE_LIMIT_PER_HOUR = 3
@@ -20,6 +23,18 @@ async def create_report(
 ) -> ReportResponse:
     user_id: str = user["sub"]
 
+    # ── Abuse block: too many violations in the last 24 hours ────────────────
+    one_day_ago = (datetime.now(timezone.utc) - timedelta(hours=ABUSE_WINDOW_HOURS)).isoformat()
+    abuse_events = await db_query("abuse_events", {
+        "user_id": f"eq.{user_id}",
+        "created_at": f"gte.{one_day_ago}",
+    })
+    if len(abuse_events) >= ABUSE_BLOCK_THRESHOLD:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account has been temporarily restricted due to suspicious activity.",
+        )
+
     # ── Rate limit: max 3 reports per hour ───────────────────────────────────
     one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
     recent = await db_query("reports", {
@@ -27,6 +42,11 @@ async def create_report(
         "created_at": f"gte.{one_hour_ago}",
     })
     if len(recent) >= RATE_LIMIT_PER_HOUR:
+        await db_insert("abuse_events", {
+            "user_id": user_id,
+            "event_type": "rate_limit_exceeded",
+            "metadata": {"limit": RATE_LIMIT_PER_HOUR, "window": "1h"},
+        })
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=f"Maximum {RATE_LIMIT_PER_HOUR} reports per hour. Please try again later.",
@@ -40,6 +60,11 @@ async def create_report(
         "created_at": f"gte.{fifteen_min_ago}",
     })
     if recent_plate:
+        await db_insert("abuse_events", {
+            "user_id": user_id,
+            "event_type": "cooldown_exceeded",
+            "metadata": {"plate": body.plate_number, "cooldown_minutes": COOLDOWN_MINUTES},
+        })
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=f"You already reported this plate recently. Please wait {COOLDOWN_MINUTES} minutes.",
