@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.db import db_query, db_select, db_update
+from app.db import db_insert, db_query, db_select, db_update
 from app.dependencies.auth import get_current_user
 from app.schemas.alerts import AlertDetail, RespondRequest
 
@@ -94,6 +94,18 @@ async def respond_to_alert(
         "rejected" if body.response == "incorrect_report" else "responded"
     )
     await db_update("reports", {"id": alert["report_id"]}, {"status": new_report_status})
+
+    # Log abuse event so the reporter accumulates violations
+    if body.response == "incorrect_report":
+        report_rows = await db_query("reports", {"id": f"eq.{alert['report_id']}"})
+        if report_rows:
+            reporter_id = report_rows[0]["reporter_user_id"]
+            await db_insert("abuse_events", {
+                "user_id": reporter_id,
+                "report_id": alert["report_id"],
+                "event_type": "incorrect_report",
+                "metadata": {"alert_id": alert_id},
+            })
 
     # Return enriched alert
     enriched = await _alerts_for_user(user_id)
