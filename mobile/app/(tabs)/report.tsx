@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -12,10 +12,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
+  Animated,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { useFocusEffect } from 'expo-router';
 import { IssueType, Report, reportsApi } from '@/lib/api';
+import { PressableScale } from '@/components/PressableScale';
+import { FadeInView } from '@/components/FadeInView';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -39,11 +42,28 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
 
 function SuccessCard({ report, onReset }: { report: Report; onReset: () => void }) {
   const issueLabel = ISSUE_TYPES.find(i => i.value === report.issue_type)?.label ?? report.issue_type;
+  const iconScale = useRef(new Animated.Value(0)).current;
+  const cardOpacity = useRef(new Animated.Value(0)).current;
+  const cardY = useRef(new Animated.Value(24)).current;
+
+  useEffect(() => {
+    // Card slides up
+    Animated.parallel([
+      Animated.timing(cardOpacity, { toValue: 1, duration: 350, useNativeDriver: true }),
+      Animated.spring(cardY, { toValue: 0, tension: 50, friction: 8, useNativeDriver: true }),
+    ]).start();
+    // Icon bounces in after card
+    Animated.spring(iconScale, {
+      toValue: 1, tension: 40, friction: 5, delay: 200, useNativeDriver: true,
+    }).start();
+  }, []);
 
   return (
     <View style={styles.successContainer}>
-      <View style={styles.successCard}>
-        <Text style={styles.successIcon}>{report.owner_notified ? '✅' : '📋'}</Text>
+      <Animated.View style={[styles.successCard, { opacity: cardOpacity, transform: [{ translateY: cardY }] }]}>
+        <Animated.Text style={[styles.successIcon, { transform: [{ scale: iconScale }] }]}>
+          {report.owner_notified ? '✅' : '📋'}
+        </Animated.Text>
         <Text style={styles.successTitle}>
           {report.owner_notified ? 'Owner Notified' : 'Report Saved'}
         </Text>
@@ -68,10 +88,10 @@ function SuccessCard({ report, onReset }: { report: Report; onReset: () => void 
             </Text>
           </View>
         </View>
-      </View>
-      <TouchableOpacity style={styles.resetBtn} onPress={onReset}>
+      </Animated.View>
+      <PressableScale onPress={onReset} style={styles.resetBtn}>
         <Text style={styles.resetBtnText}>Report Another Vehicle</Text>
-      </TouchableOpacity>
+      </PressableScale>
     </View>
   );
 }
@@ -205,13 +225,13 @@ function NewReportForm({ onSuccess }: { onSuccess: (r: Report) => void }) {
           numberOfLines={3}
         />
 
-        <TouchableOpacity
+        <PressableScale
           style={[styles.submitBtn, submitting && styles.buttonDisabled]}
           onPress={handleSubmit}
           disabled={submitting}
         >
           {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitBtnText}>Send Alert</Text>}
-        </TouchableOpacity>
+        </PressableScale>
 
         <Text style={styles.privacyNote}>
           Your identity will never be shared with the vehicle owner.
@@ -310,7 +330,11 @@ export default function ReportScreen() {
               <Text style={styles.emptySub}>Reports you file will appear here with live status updates.</Text>
             </View>
           }
-          renderItem={({ item }) => <ReportHistoryItem report={item} />}
+          renderItem={({ item, index }) => (
+            <FadeInView delay={index * 60}>
+              <ReportHistoryItem report={item} />
+            </FadeInView>
+          )}
         />
       )}
     </View>

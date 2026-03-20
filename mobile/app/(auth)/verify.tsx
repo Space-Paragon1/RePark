@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { colors, shadow, radius } from '@/lib/theme';
+import { PressableScale } from '@/components/PressableScale';
 
 export default function VerifyScreen() {
   const { phone } = useLocalSearchParams<{ phone: string }>();
@@ -25,158 +27,129 @@ export default function VerifyScreen() {
       Alert.alert('Invalid code', 'Enter the 6-digit code sent to your phone.');
       return;
     }
-
     setLoading(true);
-    const { error } = await supabase.auth.verifyOtp({
-      phone,
-      token: otp,
-      type: 'sms',
-    });
+    const { error } = await supabase.auth.verifyOtp({ phone, token: otp, type: 'sms' });
     setLoading(false);
-
-    if (error) {
-      Alert.alert('Verification failed', error.message);
-      return;
-    }
-
-    // Auth state change in AuthContext will redirect to (tabs)
+    if (error) Alert.alert('Verification failed', error.message);
   };
 
   const handleResend = async () => {
     setResending(true);
     const { error } = await supabase.auth.signInWithOtp({ phone });
     setResending(false);
-
-    if (error) {
-      Alert.alert('Error', error.message);
-    } else {
-      Alert.alert('Code sent', 'A new verification code has been sent.');
-      setOtp('');
-    }
+    if (error) Alert.alert('Error', error.message);
+    else { Alert.alert('Code sent', 'A new verification code has been sent.'); setOtp(''); }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <View style={styles.inner}>
+    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      {/* Hero */}
+      <View style={styles.hero}>
+        <View style={styles.iconBox}>
+          <Text style={styles.iconText}>💬</Text>
+        </View>
+        <Text style={styles.heroTitle}>Check your messages</Text>
+        <Text style={styles.heroSub}>Code sent to {phone}</Text>
+      </View>
+
+      {/* Form card */}
+      <View style={styles.card}>
         <TouchableOpacity style={styles.back} onPress={() => router.back()}>
-          <Text style={styles.backText}>← Back</Text>
+          <Text style={styles.backText}>← Change number</Text>
         </TouchableOpacity>
 
-        <Text style={styles.title}>Enter your code</Text>
-        <Text style={styles.subtitle}>
-          We sent a 6-digit code to{'\n'}
-          <Text style={styles.phone}>{phone}</Text>
-        </Text>
+        <Text style={styles.cardTitle}>Enter the 6-digit code</Text>
 
         <TextInput
-          style={styles.input}
+          style={styles.otpInput}
           value={otp}
-          onChangeText={(text) => setOtp(text.replace(/\D/g, '').slice(0, 6))}
+          onChangeText={(t) => setOtp(t.replace(/\D/g, '').slice(0, 6))}
           placeholder="000000"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textMuted}
           keyboardType="number-pad"
           maxLength={6}
           autoFocus
           textAlign="center"
         />
 
-        <TouchableOpacity
+        <PressableScale
           style={[styles.button, (loading || otp.length < 6) && styles.buttonDisabled]}
           onPress={handleVerify}
           disabled={loading || otp.length < 6}
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Verify</Text>
-          )}
-        </TouchableOpacity>
+          {loading
+            ? <ActivityIndicator color="#fff" />
+            : <Text style={styles.buttonText}>Verify & Sign In →</Text>}
+        </PressableScale>
 
-        <TouchableOpacity style={styles.resend} onPress={handleResend} disabled={resending}>
-          {resending ? (
-            <ActivityIndicator color="#2563EB" size="small" />
-          ) : (
-            <Text style={styles.resendText}>Resend code</Text>
-          )}
-        </TouchableOpacity>
+        <PressableScale style={styles.resend} onPress={handleResend} disabled={resending}>
+          {resending
+            ? <ActivityIndicator color={colors.primary} size="small" />
+            : <Text style={styles.resendText}>Didn't receive it? Resend code</Text>}
+        </PressableScale>
       </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  inner: {
+  root: { flex: 1, backgroundColor: colors.primary },
+
+  hero: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 28,
+    alignItems: 'center',
+    paddingBottom: 24,
   },
-  back: {
-    position: 'absolute',
-    top: 60,
-    left: 28,
-  },
-  backText: {
-    fontSize: 15,
-    color: '#2563EB',
-    fontWeight: '500',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#6B7280',
-    lineHeight: 22,
-    marginBottom: 36,
-  },
-  phone: {
-    color: '#111827',
-    fontWeight: '600',
-  },
-  input: {
-    borderWidth: 1.5,
-    borderColor: '#D1D5DB',
-    borderRadius: 10,
-    paddingVertical: 16,
-    fontSize: 28,
-    fontWeight: '600',
-    letterSpacing: 10,
-    color: '#111827',
-    backgroundColor: '#F9FAFB',
-    marginBottom: 24,
-  },
-  button: {
-    backgroundColor: '#2563EB',
-    borderRadius: 10,
-    paddingVertical: 15,
+  iconBox: {
+    width: 72,
+    height: 72,
+    borderRadius: radius.lg,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
   },
-  buttonDisabled: {
-    opacity: 0.5,
+  iconText: { fontSize: 36 },
+  heroTitle: { fontSize: 22, fontWeight: '700', color: '#fff', marginBottom: 6 },
+  heroSub: { fontSize: 14, color: 'rgba(255,255,255,0.75)' },
+
+  card: {
+    backgroundColor: colors.card,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 28,
+    paddingBottom: 48,
+    ...shadow.md,
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  back: { marginBottom: 20 },
+  backText: { fontSize: 14, color: colors.primary, fontWeight: '500' },
+  cardTitle: { fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: 20 },
+
+  otpInput: {
+    borderWidth: 2,
+    borderColor: colors.primaryBorder,
+    borderRadius: radius.md,
+    paddingVertical: 18,
+    fontSize: 32,
+    fontWeight: '700',
+    letterSpacing: 12,
+    color: colors.text,
+    backgroundColor: colors.primaryLight,
+    marginBottom: 24,
   },
-  resend: {
+
+  button: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    paddingVertical: 16,
     alignItems: 'center',
-    paddingVertical: 10,
+    marginBottom: 16,
+    ...shadow.sm,
   },
-  resendText: {
-    color: '#2563EB',
-    fontSize: 14,
-    fontWeight: '500',
-  },
+  buttonDisabled: { opacity: 0.5 },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+
+  resend: { alignItems: 'center', paddingVertical: 10 },
+  resendText: { color: colors.primary, fontSize: 14, fontWeight: '500' },
 });

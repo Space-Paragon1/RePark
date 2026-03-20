@@ -11,6 +11,10 @@ import {
   Alert,
   RefreshControl,
 } from 'react-native';
+import { colors, shadow, radius } from '@/lib/theme';
+import { PressableScale } from '@/components/PressableScale';
+import { FadeInView } from '@/components/FadeInView';
+import { SkeletonCard } from '@/components/Skeleton';
 import { AlertDetail, OwnerResponseType, alertsApi } from '@/lib/api';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -95,7 +99,7 @@ function AlertCard({
       ) : (
         <View style={styles.responseButtons}>
           {RESPONSE_BUTTONS.map(btn => (
-            <TouchableOpacity
+            <PressableScale
               key={btn.value}
               style={[styles.responseBtn, { borderColor: btn.color }, responding && styles.buttonDisabled]}
               onPress={() => confirmRespond(btn.value, btn.label)}
@@ -106,7 +110,7 @@ function AlertCard({
               ) : (
                 <Text style={[styles.responseBtnText, { color: btn.color }]}>{btn.label}</Text>
               )}
-            </TouchableOpacity>
+            </PressableScale>
           ))}
         </View>
       )}
@@ -174,8 +178,14 @@ export default function AlertsScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color="#2563EB" size="large" />
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Alerts</Text>
+          <Text style={styles.subtitle}>Reports about your registered vehicles</Text>
+        </View>
+        <View style={{ padding: 16 }}>
+          <SkeletonCard /><SkeletonCard /><SkeletonCard />
+        </View>
       </View>
     );
   }
@@ -203,12 +213,14 @@ export default function AlertsScreen() {
             </Text>
           </View>
         }
-        renderItem={({ item }) => (
-          <AlertCard
-            alert={item}
-            onRespond={handleRespond}
-            responding={respondingId === item.id}
-          />
+        renderItem={({ item, index }) => (
+          <FadeInView delay={index * 60}>
+            <AlertCard
+              alert={item}
+              onRespond={handleRespond}
+              responding={respondingId === item.id}
+            />
+          </FadeInView>
         )}
       />
     </View>
@@ -218,60 +230,60 @@ export default function AlertsScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: colors.bg },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     paddingHorizontal: 20,
     paddingTop: 64,
-    paddingBottom: 16,
-    backgroundColor: '#fff',
+    paddingBottom: 18,
+    backgroundColor: colors.card,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.border,
   },
-  title: { fontSize: 22, fontWeight: '700', color: '#111827' },
-  subtitle: { fontSize: 13, color: '#6B7280', marginTop: 2 },
+  title: { fontSize: 24, fontWeight: '800', color: colors.text },
+  subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
     padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    marginBottom: 10,
+    ...shadow.sm,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 10,
   },
-  plate: { fontSize: 20, fontWeight: '700', color: '#111827', letterSpacing: 1 },
-  vehicleDesc: { fontSize: 13, color: '#6B7280', marginTop: 2 },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  plate: { fontSize: 20, fontWeight: '800', color: colors.text, letterSpacing: 1 },
+  vehicleDesc: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.full },
   badgePending: { backgroundColor: '#FEF3C7' },
-  badgeResponded: { backgroundColor: '#D1FAE5' },
-  badgeText: { fontSize: 12, fontWeight: '600' },
+  badgeResponded: { backgroundColor: colors.successLight },
+  badgeText: { fontSize: 11, fontWeight: '700' },
   badgeTextPending: { color: '#92400E' },
-  badgeTextResponded: { color: '#065F46' },
-  issueRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
+  badgeTextResponded: { color: colors.success },
+  issueRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
   issueIcon: { fontSize: 14, marginRight: 6 },
-  issueText: { fontSize: 14, color: '#374151', flex: 1 },
-  reportedAt: { fontSize: 12, color: '#9CA3AF', marginBottom: 14 },
-  responseRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
-  responseLabel: { fontSize: 13, color: '#6B7280' },
-  responseValue: { fontSize: 13, fontWeight: '600', color: '#111827' },
+  issueText: { fontSize: 14, color: colors.textSecondary, flex: 1 },
+  reportedAt: { fontSize: 11, color: colors.textMuted, marginBottom: 14 },
+  responseRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 6 },
+  responseLabel: { fontSize: 13, color: colors.textMuted },
+  responseValue: { fontSize: 13, fontWeight: '700', color: colors.text },
   responseButtons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   responseBtn: {
     borderWidth: 1.5,
-    borderRadius: 8,
+    borderRadius: radius.sm,
     paddingVertical: 8,
-    paddingHorizontal: 12,
-    minWidth: 100,
+    paddingHorizontal: 14,
+    minWidth: 105,
     alignItems: 'center',
+    backgroundColor: colors.bg,
   },
-  responseBtnText: { fontSize: 13, fontWeight: '600' },
+  responseBtnText: { fontSize: 13, fontWeight: '700' },
   buttonDisabled: { opacity: 0.5 },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '600', color: '#111827', marginBottom: 8 },
-  emptySub: { fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 20 },
+  emptyIcon: { fontSize: 56, marginBottom: 16 },
+  emptyTitle: { fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: 8 },
+  emptySub: { fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 21 },
 });

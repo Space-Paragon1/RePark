@@ -25,6 +25,7 @@ RePark lets nearby users report vehicles that are blocking access, then relays a
 - 5 structured issue types (blocking driveway, construction access, garbage pickup, restricted zone, emergency access)
 - Optional free-text message
 - Rate limiting: max 3 reports per hour, 15-minute cooldown per plate
+- Report history with live status tracking — reporters see when owners respond
 
 ### Alerts (Owner Notifications)
 - When a registered plate is reported, the owner receives an alert instantly
@@ -37,7 +38,26 @@ RePark lets nearby users report vehicles that are blocking access, then relays a
 ### Abuse Safeguards
 - Anonymous relay — reporter never sees owner identity
 - Rate limits and cooldowns enforced server-side
-- `incorrect_report` response flags potential abuse
+- `incorrect_report` response logs an abuse event against the reporter
+- Users with 5+ abuse events in 24 hours are temporarily blocked from submitting reports
+
+### Account Management
+- Export all personal data as JSON (GDPR-style)
+- Delete account — permanently removes all vehicles, reports, alerts, and auth record
+- Push token management for future notification delivery
+
+### Home Dashboard
+- Live stats: vehicles registered, pending alerts, reports filed
+- Numbers animate on load (count-up effect)
+- Quick-action shortcuts to all core flows
+
+### UI & Polish
+- Consistent design system (`lib/theme.ts`) with shared colours, shadows, and border radii
+- Branded blue hero sections on all major screens
+- Skeleton loading cards instead of spinners
+- Staggered fade + slide-in animations on list items
+- Spring-scale press feedback on every button
+- Bounce animation on report success screen
 
 ---
 
@@ -51,6 +71,7 @@ RePark lets nearby users report vehicles that are blocking access, then relays a
 | Database | PostgreSQL via Supabase |
 | Auth | Supabase Auth (Phone OTP + Twilio SMS) |
 | Real-time | Supabase Realtime (WebSocket) |
+| Hosting | Railway (backend), Expo Go (mobile dev) |
 | HTTP client | httpx (backend), fetch (mobile) |
 
 ---
@@ -59,35 +80,45 @@ RePark lets nearby users report vehicles that are blocking access, then relays a
 
 ```
 RePark/
-├── mobile/                  # Expo React Native app
+├── mobile/                   # Expo React Native app
 │   ├── app/
-│   │   ├── (auth)/          # Login + OTP verification screens
-│   │   └── (tabs)/          # Home, Report, Vehicles, Alerts, Profile
-│   ├── contexts/            # AuthContext (session + push token registration)
+│   │   ├── (auth)/           # Login + OTP verification screens
+│   │   └── (tabs)/           # Home, Report, Vehicles, Alerts, Profile
+│   ├── components/
+│   │   ├── PressableScale.tsx # Animated press-scale button wrapper
+│   │   ├── FadeInView.tsx     # Fade + slide-up entrance animation
+│   │   └── Skeleton.tsx       # Pulsing skeleton loader cards
+│   ├── contexts/             # AuthContext (session management)
 │   ├── lib/
-│   │   ├── api.ts           # Typed API client
-│   │   ├── supabase.ts      # Supabase client
-│   │   └── notifications.ts # Push notification helpers
-│   └── .env                 # EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_API_URL
+│   │   ├── api.ts            # Typed API client
+│   │   ├── supabase.ts       # Supabase client
+│   │   ├── notifications.ts  # Push notification helpers
+│   │   └── theme.ts          # Design tokens (colours, shadows, radii)
+│   └── .env                  # EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_API_URL
 │
-├── backend/                 # FastAPI API
+├── backend/                  # FastAPI API
 │   ├── app/
-│   │   ├── routers/         # auth, vehicles, reports, alerts, push_tokens
-│   │   ├── schemas/         # Pydantic models
-│   │   ├── services/        # push.py (Expo Push API)
-│   │   ├── dependencies/    # JWT auth (JWKS)
-│   │   ├── db.py            # PostgREST helpers
+│   │   ├── routers/          # auth, vehicles, reports, alerts, push_tokens, account
+│   │   ├── schemas/          # Pydantic models
+│   │   ├── services/         # push.py (Expo Push API)
+│   │   ├── dependencies/     # JWT auth (JWKS)
+│   │   ├── db.py             # PostgREST helpers
 │   │   └── main.py
-│   └── .env                 # Supabase credentials
+│   ├── tests/                # pytest test suite
+│   │   ├── test_reports.py   # Rate limit, cooldown, abuse block, pipeline
+│   │   ├── test_alerts.py    # List, respond, abuse logging
+│   │   └── test_auth.py      # 401/403 on unauthenticated requests
+│   ├── Procfile              # Railway deployment start command
+│   └── .env                  # Supabase credentials
 │
 ├── database/
-│   └── schema.sql           # Full database schema
+│   └── schema.sql            # Full database schema
 │
 └── docs/
     ├── PRODUCT_SPEC.md
     ├── SYSTEM_ARCHITECTURE.md
     ├── MVP_EXECUTION_PLAN.md
-    └── TROUBLESHOOTING.md   # All issues encountered and how they were fixed
+    └── TROUBLESHOOTING.md    # All issues encountered and how they were fixed
 ```
 
 ---
@@ -107,12 +138,34 @@ uvicorn app.main:app --reload --host 0.0.0.0
 ```bash
 cd mobile
 npm install --legacy-peer-deps
-npx expo start
+npx expo start --tunnel
 ```
 
 Open in **Expo Go** (iOS/Android) by scanning the QR code.
 
 > **Note:** Push notifications require a development build (not Expo Go). Real-time alerts via Supabase Realtime work fully in Expo Go.
+
+### Running Tests
+```bash
+cd backend
+pip install -r requirements-dev.txt
+pytest tests/ -v
+```
+
+---
+
+## Deployment
+
+The backend is deployed on **Railway** and runs 24/7 at a public `https://` URL.
+
+Set the following environment variables in Railway → Variables:
+
+| Key | Description |
+|---|---|
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_ANON_KEY` | Supabase anon/public key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
+| `SUPABASE_JWT_SECRET` | Supabase JWT secret |
 
 ---
 
@@ -122,7 +175,7 @@ Open in **Expo Go** (iOS/Android) by scanning the QR code.
 ```
 EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-EXPO_PUBLIC_API_URL=http://YOUR_LOCAL_IP:8000
+EXPO_PUBLIC_API_URL=https://your-railway-app.up.railway.app
 ```
 
 ### `backend/.env`
@@ -142,7 +195,7 @@ SUPABASE_JWT_SECRET=your-jwt-secret
 | `vehicles` | Registered vehicles per user |
 | `reports` | Obstruction reports filed by users |
 | `alerts` | Notifications sent to vehicle owners |
-| `push_tokens` | Expo push tokens for notifications |
+| `push_tokens` | Expo push tokens for future notifications |
 | `abuse_events` | Flagged abuse incidents |
 
 Realtime is enabled on the `alerts` table (`supabase_realtime` publication).

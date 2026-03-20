@@ -1,15 +1,21 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Share, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Alert, Share, ActivityIndicator } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { accountApi } from '@/lib/api';
+import { colors, shadow, radius } from '@/lib/theme';
+import { PressableScale } from '@/components/PressableScale';
+import { FadeInView } from '@/components/FadeInView';
 
 export default function ProfileScreen() {
   const { session, signOut } = useAuth();
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const phone = session?.user.phone ?? '';
+  const initials = phone.slice(-2).toUpperCase() || 'ME';
+
   const handleSignOut = () =>
-    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
+    Alert.alert('Sign out', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Sign out', style: 'destructive', onPress: signOut },
     ]);
@@ -18,10 +24,7 @@ export default function ProfileScreen() {
     setExporting(true);
     try {
       const data = await accountApi.export();
-      await Share.share({
-        title: 'My RePark Data',
-        message: JSON.stringify(data, null, 2),
-      });
+      await Share.share({ title: 'My RePark Data', message: JSON.stringify(data, null, 2) });
     } catch (e: any) {
       Alert.alert('Error', e.message);
     } finally {
@@ -32,21 +35,16 @@ export default function ProfileScreen() {
   const handleDelete = () =>
     Alert.alert(
       'Delete account',
-      'This will permanently delete your account and all your data — vehicles, reports, and alerts. This cannot be undone.',
+      'This permanently deletes your account, vehicles, reports, and alerts. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'Delete permanently',
           style: 'destructive',
           onPress: async () => {
             setDeleting(true);
-            try {
-              await accountApi.delete();
-              await signOut();
-            } catch (e: any) {
-              Alert.alert('Error', e.message);
-              setDeleting(false);
-            }
+            try { await accountApi.delete(); await signOut(); }
+            catch (e: any) { Alert.alert('Error', e.message); setDeleting(false); }
           },
         },
       ],
@@ -54,73 +52,134 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.label}>Phone number</Text>
-        <Text style={styles.phone}>{session?.user.phone}</Text>
+      {/* Hero */}
+      <View style={styles.hero}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>{initials}</Text>
+        </View>
+        <Text style={styles.heroPhone}>{phone}</Text>
+        <Text style={styles.heroLabel}>Your account</Text>
       </View>
 
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.exportBtn} onPress={handleExport} disabled={exporting}>
-          {exporting
-            ? <ActivityIndicator color="#2563EB" size="small" />
-            : <Text style={styles.exportText}>Export my data</Text>}
-        </TouchableOpacity>
+      {/* Actions */}
+      <FadeInView delay={100}>
+        <View style={styles.section}>
+          <MenuItem
+            icon="📤"
+            label="Export my data"
+            sublabel="Download everything RePark holds about you"
+            onPress={handleExport}
+            loading={exporting}
+            color={colors.primary}
+          />
+        </View>
+      </FadeInView>
 
-        <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
-          <Text style={styles.signOutText}>Sign out</Text>
-        </TouchableOpacity>
+      <FadeInView delay={160}>
+        <View style={styles.section}>
+          <MenuItem
+            icon="🚪"
+            label="Sign out"
+            sublabel="You can sign back in anytime"
+            onPress={handleSignOut}
+            color={colors.textSecondary}
+          />
+          <View style={styles.divider} />
+          <MenuItem
+            icon="🗑️"
+            label="Delete account"
+            sublabel="Permanently remove all your data"
+            onPress={handleDelete}
+            loading={deleting}
+            color={colors.danger}
+          />
+        </View>
+      </FadeInView>
 
-        <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete} disabled={deleting}>
-          {deleting
-            ? <ActivityIndicator color="#EF4444" size="small" />
-            : <Text style={styles.deleteText}>Delete account</Text>}
-        </TouchableOpacity>
-      </View>
+      <Text style={styles.footer}>RePark · Privacy first</Text>
     </View>
   );
 }
 
+function MenuItem({
+  icon, label, sublabel, onPress, loading, color,
+}: {
+  icon: string; label: string; sublabel: string;
+  onPress: () => void; loading?: boolean; color: string;
+}) {
+  return (
+    <PressableScale style={styles.menuItem} onPress={onPress} disabled={loading}>
+      <View style={[styles.menuIcon, { backgroundColor: `${color}18` }]}>
+        <Text style={styles.menuIconText}>{icon}</Text>
+      </View>
+      <View style={styles.menuText}>
+        <Text style={[styles.menuLabel, { color }]}>{label}</Text>
+        <Text style={styles.menuSub}>{sublabel}</Text>
+      </View>
+      {loading
+        ? <ActivityIndicator color={color} size="small" />
+        : <Text style={[styles.menuChevron, { color: `${color}80` }]}>›</Text>}
+    </PressableScale>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-    paddingHorizontal: 24,
-    paddingTop: 80,
+  container: { flex: 1, backgroundColor: colors.bg },
+
+  hero: {
+    backgroundColor: colors.primary,
+    paddingTop: 72,
+    paddingBottom: 36,
+    alignItems: 'center',
   },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+  avatar: {
+    width: 72,
+    height: 72,
+    borderRadius: radius.full,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 14,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.4)',
+  },
+  avatarText: { fontSize: 24, fontWeight: '800', color: '#fff' },
+  heroPhone: { fontSize: 18, fontWeight: '700', color: '#fff', marginBottom: 4 },
+  heroLabel: { fontSize: 13, color: 'rgba(255,255,255,0.65)' },
+
+  section: {
+    backgroundColor: colors.card,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: radius.md,
+    overflow: 'hidden',
+    ...shadow.sm,
+  },
+  divider: { height: 1, backgroundColor: colors.border, marginLeft: 62 },
+
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    marginBottom: 32,
   },
-  label: { fontSize: 12, color: '#6B7280', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
-  phone: { fontSize: 17, fontWeight: '600', color: '#111827' },
-  actions: { gap: 12 },
-  exportBtn: {
-    borderWidth: 1.5,
-    borderColor: '#2563EB',
-    borderRadius: 10,
-    paddingVertical: 13,
+  menuIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: radius.sm,
+    justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 14,
   },
-  exportText: { color: '#2563EB', fontWeight: '600', fontSize: 15 },
-  signOutBtn: {
-    borderWidth: 1.5,
-    borderColor: '#6B7280',
-    borderRadius: 10,
-    paddingVertical: 13,
-    alignItems: 'center',
+  menuIconText: { fontSize: 18 },
+  menuText: { flex: 1 },
+  menuLabel: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
+  menuSub: { fontSize: 12, color: colors.textMuted },
+  menuChevron: { fontSize: 22, marginLeft: 8 },
+
+  footer: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 32,
   },
-  signOutText: { color: '#6B7280', fontWeight: '600', fontSize: 15 },
-  deleteBtn: {
-    borderWidth: 1.5,
-    borderColor: '#EF4444',
-    borderRadius: 10,
-    paddingVertical: 13,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  deleteText: { color: '#EF4444', fontWeight: '600', fontSize: 15 },
 });
