@@ -1,42 +1,27 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  Modal,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
+  View, Text, FlatList, TouchableOpacity, StyleSheet,
+  ActivityIndicator, Alert, Modal, TextInput,
+  KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { Vehicle, VehicleCreate, vehiclesApi } from '@/lib/api';
+import { colors, shadow, radius } from '@/lib/theme';
+import { PressableScale } from '@/components/PressableScale';
+import { FadeInView } from '@/components/FadeInView';
+import { SkeletonCard } from '@/components/Skeleton';
 
 // ─── Add Vehicle Modal ────────────────────────────────────────────────────────
 
-function AddVehicleModal({
-  visible,
-  onClose,
-  onAdded,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  onAdded: (v: Vehicle) => void;
+function AddVehicleModal({ visible, onClose, onAdded }: {
+  visible: boolean; onClose: () => void; onAdded: (v: Vehicle) => void;
 }) {
   const [form, setForm] = useState<VehicleCreate>({
-    plate_number: '',
-    make: '',
-    model: '',
-    color: '',
-    parking_zone: null,
+    plate_number: '', make: '', model: '', color: '', parking_zone: null,
   });
   const [saving, setSaving] = useState(false);
 
   const set = (field: keyof VehicleCreate) => (value: string) =>
-    setForm((f) => ({ ...f, [field]: value || null }));
+    setForm(f => ({ ...f, [field]: value || null }));
 
   const handleSave = async () => {
     if (!form.plate_number || !form.make || !form.model || !form.color) {
@@ -55,37 +40,40 @@ function AddVehicleModal({
     }
   };
 
+  const FIELDS = [
+    { field: 'plate_number' as const, label: 'Plate Number', placeholder: 'ABC 123', caps: true, required: true },
+    { field: 'make'         as const, label: 'Make',         placeholder: 'Toyota',           required: true },
+    { field: 'model'        as const, label: 'Model',        placeholder: 'Camry',            required: true },
+    { field: 'color'        as const, label: 'Colour',       placeholder: 'Silver',           required: true },
+    { field: 'parking_zone' as const, label: 'Parking Zone', placeholder: 'Zone A (optional)', required: false },
+  ];
+
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={styles.modalContent}>
+          {/* Modal header */}
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Register Vehicle</Text>
-            <TouchableOpacity onPress={onClose}>
-              <Text style={styles.modalClose}>Cancel</Text>
-            </TouchableOpacity>
+            <View style={styles.modalDrag} />
+            <View style={styles.modalTitleRow}>
+              <Text style={styles.modalTitle}>Register Vehicle</Text>
+              <TouchableOpacity onPress={onClose}>
+                <Text style={styles.modalClose}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          {(
-            [
-              { field: 'plate_number', label: 'Plate Number *', placeholder: 'ABC 123', caps: true },
-              { field: 'make',         label: 'Make *',         placeholder: 'Toyota' },
-              { field: 'model',        label: 'Model *',        placeholder: 'Camry' },
-              { field: 'color',        label: 'Colour *',       placeholder: 'Silver' },
-              { field: 'parking_zone', label: 'Parking Zone',   placeholder: 'Zone A (optional)' },
-            ] as const
-          ).map(({ field, label, placeholder, caps }) => (
+          {FIELDS.map(({ field, label, placeholder, caps, required }) => (
             <View key={field} style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>{label}</Text>
+              <Text style={styles.fieldLabel}>
+                {label} {required && <Text style={styles.required}>*</Text>}
+              </Text>
               <TextInput
                 style={styles.fieldInput}
                 value={form[field] ?? ''}
                 onChangeText={set(field)}
                 placeholder={placeholder}
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.textMuted}
                 autoCapitalize={caps ? 'characters' : 'words'}
               />
             </View>
@@ -96,11 +84,9 @@ function AddVehicleModal({
             onPress={handleSave}
             disabled={saving}
           >
-            {saving ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.saveButtonText}>Save Vehicle</Text>
-            )}
+            {saving
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={styles.saveButtonText}>Save Vehicle</Text>}
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -110,36 +96,30 @@ function AddVehicleModal({
 
 // ─── Vehicle Card ─────────────────────────────────────────────────────────────
 
-function VehicleCard({
-  vehicle,
-  onDelete,
-}: {
-  vehicle: Vehicle;
-  onDelete: () => void;
-}) {
+function VehicleCard({ vehicle, onDelete }: { vehicle: Vehicle; onDelete: () => void }) {
+  const initials = `${vehicle.make[0] ?? ''}${vehicle.model[0] ?? ''}`.toUpperCase();
+
   const confirmDelete = () =>
-    Alert.alert(
-      'Remove vehicle',
-      `Remove ${vehicle.plate_number} from your account?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Remove', style: 'destructive', onPress: onDelete },
-      ],
-    );
+    Alert.alert('Remove vehicle', `Remove ${vehicle.plate_number}?`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Remove', style: 'destructive', onPress: onDelete },
+    ]);
 
   return (
     <View style={styles.card}>
-      <View style={styles.cardMain}>
-        <Text style={styles.plate}>{vehicle.plate_number}</Text>
-        <Text style={styles.vehicleDesc}>
-          {vehicle.color} {vehicle.make} {vehicle.model}
-        </Text>
-        {vehicle.parking_zone ? (
-          <Text style={styles.zone}>Zone: {vehicle.parking_zone}</Text>
-        ) : null}
+      <View style={styles.cardAccent} />
+      <View style={styles.cardAvatar}>
+        <Text style={styles.cardAvatarText}>{initials}</Text>
       </View>
-      <TouchableOpacity onPress={confirmDelete} style={styles.deleteBtn}>
-        <Text style={styles.deleteText}>Remove</Text>
+      <View style={styles.cardBody}>
+        <Text style={styles.plate}>{vehicle.plate_number}</Text>
+        <Text style={styles.vehicleDesc}>{vehicle.color} {vehicle.make} {vehicle.model}</Text>
+        {vehicle.parking_zone
+          ? <View style={styles.zonePill}><Text style={styles.zoneText}>Zone {vehicle.parking_zone}</Text></View>
+          : null}
+      </View>
+      <TouchableOpacity onPress={confirmDelete} style={styles.deleteBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+        <Text style={styles.deleteText}>✕</Text>
       </TouchableOpacity>
     </View>
   );
@@ -153,140 +133,141 @@ export default function VehiclesScreen() {
   const [showAdd, setShowAdd] = useState(false);
 
   const loadVehicles = useCallback(async () => {
-    try {
-      const data = await vehiclesApi.list();
-      setVehicles(data);
-    } catch (e: any) {
-      Alert.alert('Error', e.message);
-    } finally {
-      setLoading(false);
-    }
+    try { setVehicles(await vehiclesApi.list()); }
+    catch (e: any) { Alert.alert('Error', e.message); }
+    finally { setLoading(false); }
   }, []);
 
   useEffect(() => { loadVehicles(); }, [loadVehicles]);
 
-  const handleAdded = (v: Vehicle) => {
-    setVehicles((prev) => [v, ...prev]);
-    setShowAdd(false);
-  };
-
+  const handleAdded = (v: Vehicle) => { setVehicles(prev => [v, ...prev]); setShowAdd(false); };
   const handleDelete = async (id: string) => {
-    try {
-      await vehiclesApi.delete(id);
-      setVehicles((prev) => prev.filter((v) => v.id !== id));
-    } catch (e: any) {
-      Alert.alert('Error', e.message);
-    }
+    try { await vehiclesApi.delete(id); setVehicles(prev => prev.filter(v => v.id !== id)); }
+    catch (e: any) { Alert.alert('Error', e.message); }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>My Vehicles</Text>
+        <View>
+          <Text style={styles.headerLabel}>Registered</Text>
+          <Text style={styles.headerTitle}>My Vehicles</Text>
+        </View>
         <TouchableOpacity style={styles.addBtn} onPress={() => setShowAdd(true)}>
           <Text style={styles.addBtnText}>+ Add</Text>
         </TouchableOpacity>
       </View>
 
       {loading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} color="#2563EB" />
-      ) : vehicles.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>🚗</Text>
-          <Text style={styles.emptyTitle}>No vehicles yet</Text>
-          <Text style={styles.emptySub}>Register a vehicle to receive alerts when it is reported.</Text>
+        <View style={{ padding: 16 }}>
+          <SkeletonCard /><SkeletonCard /><SkeletonCard />
         </View>
       ) : (
         <FlatList
           data={vehicles}
-          keyExtractor={(v) => v.id}
-          contentContainerStyle={{ paddingBottom: 32 }}
-          renderItem={({ item }) => (
-            <VehicleCard vehicle={item} onDelete={() => handleDelete(item.id)} />
+          keyExtractor={v => v.id}
+          contentContainerStyle={{ padding: 16, paddingBottom: 32, flexGrow: 1 }}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Text style={styles.emptyIcon}>🚗</Text>
+              <Text style={styles.emptyTitle}>No vehicles yet</Text>
+              <Text style={styles.emptySub}>Register your plate to receive anonymous alerts when reported.</Text>
+              <PressableScale onPress={() => setShowAdd(true)} style={styles.emptyBtn}>
+                <Text style={styles.emptyBtnText}>Register a Vehicle</Text>
+              </PressableScale>
+            </View>
+          }
+          renderItem={({ item, index }) => (
+            <FadeInView delay={index * 60}>
+              <VehicleCard vehicle={item} onDelete={() => handleDelete(item.id)} />
+            </FadeInView>
           )}
         />
       )}
 
-      <AddVehicleModal
-        visible={showAdd}
-        onClose={() => setShowAdd(false)}
-        onAdded={handleAdded}
-      />
+      <AddVehicleModal visible={showAdd} onClose={() => setShowAdd(false)} onAdded={handleAdded} />
     </View>
   );
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: colors.bg },
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 64,
-    paddingBottom: 16,
-    backgroundColor: '#fff',
+    paddingBottom: 18,
+    backgroundColor: colors.card,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.border,
   },
-  title: { fontSize: 22, fontWeight: '700', color: '#111827' },
-  addBtn: {
-    backgroundColor: '#2563EB',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  addBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+  headerLabel: { fontSize: 12, color: colors.textMuted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
+  headerTitle: { fontSize: 24, fontWeight: '800', color: colors.text, marginTop: 2 },
+  addBtn: { backgroundColor: colors.primary, paddingHorizontal: 18, paddingVertical: 9, borderRadius: radius.full, ...shadow.sm },
+  addBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginTop: 12,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    marginBottom: 10,
+    overflow: 'hidden',
+    ...shadow.sm,
   },
-  cardMain: { flex: 1 },
-  plate: { fontSize: 18, fontWeight: '700', color: '#111827', letterSpacing: 1 },
-  vehicleDesc: { fontSize: 14, color: '#374151', marginTop: 2 },
-  zone: { fontSize: 12, color: '#6B7280', marginTop: 4 },
-  deleteBtn: { padding: 8 },
-  deleteText: { color: '#EF4444', fontWeight: '500', fontSize: 14 },
-  empty: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '600', color: '#111827', marginBottom: 8 },
-  emptySub: { fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 20 },
+  cardAccent: { width: 4, alignSelf: 'stretch', backgroundColor: colors.primary },
+  cardAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.sm,
+    backgroundColor: colors.primaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 14,
+  },
+  cardAvatarText: { fontSize: 14, fontWeight: '800', color: colors.primary },
+  cardBody: { flex: 1, paddingVertical: 14 },
+  plate: { fontSize: 18, fontWeight: '800', color: colors.text, letterSpacing: 1 },
+  vehicleDesc: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+  zonePill: {
+    marginTop: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primaryLight,
+    borderRadius: radius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  zoneText: { fontSize: 11, color: colors.primary, fontWeight: '600' },
+  deleteBtn: { padding: 16 },
+  deleteText: { color: colors.textMuted, fontSize: 16, fontWeight: '600' },
+
+  empty: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, paddingTop: 60 },
+  emptyIcon: { fontSize: 56, marginBottom: 16 },
+  emptyTitle: { fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: 8 },
+  emptySub: { fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 21, marginBottom: 24 },
+  emptyBtn: { backgroundColor: colors.primary, borderRadius: radius.md, paddingHorizontal: 24, paddingVertical: 12, ...shadow.sm },
+  emptyBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+
   // Modal
   modalContent: { padding: 24, paddingBottom: 48 },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 28,
-  },
-  modalTitle: { fontSize: 20, fontWeight: '700', color: '#111827' },
-  modalClose: { fontSize: 16, color: '#2563EB', fontWeight: '500' },
+  modalHeader: { marginBottom: 24 },
+  modalDrag: { width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center', marginBottom: 20 },
+  modalTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  modalTitle: { fontSize: 20, fontWeight: '800', color: colors.text },
+  modalClose: { fontSize: 16, color: colors.primary, fontWeight: '600' },
   fieldGroup: { marginBottom: 18 },
-  fieldLabel: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 6 },
+  fieldLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: 6 },
+  required: { color: colors.danger },
   fieldInput: {
-    borderWidth: 1.5,
-    borderColor: '#D1D5DB',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#111827',
-    backgroundColor: '#F9FAFB',
+    borderWidth: 1.5, borderColor: colors.border, borderRadius: radius.md,
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: colors.text, backgroundColor: colors.bg,
   },
-  saveButton: {
-    backgroundColor: '#2563EB',
-    borderRadius: 10,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginTop: 8,
-  },
+  saveButton: { backgroundColor: colors.primary, borderRadius: radius.md, paddingVertical: 15, alignItems: 'center', marginTop: 8, ...shadow.sm },
   buttonDisabled: { opacity: 0.6 },
-  saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });
