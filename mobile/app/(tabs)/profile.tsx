@@ -59,6 +59,9 @@ export default function ProfileScreen() {
         </View>
         <Text style={styles.heroPhone}>{phone}</Text>
         <Text style={styles.heroLabel}>Your account</Text>
+        <PressableScale style={styles.signOutBtn} onPress={handleSignOut}>
+          <Text style={styles.signOutBtnText}>Sign Out</Text>
+        </PressableScale>
       </View>
 
       {/* Actions */}
@@ -175,6 +178,22 @@ const styles = StyleSheet.create({
   menuLabel: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
   menuSub: { fontSize: 12, color: colors.textMuted },
   menuChevron: { fontSize: 22, marginLeft: 8 },
+
+  signOutBtn: {
+    marginTop: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(255,255,255,0.5)',
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingVertical: 10,
+    paddingHorizontal: 28,
+  },
+  signOutBtnText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
 
   footer: {
     textAlign: 'center',
