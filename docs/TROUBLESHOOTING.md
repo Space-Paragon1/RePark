@@ -237,7 +237,7 @@ Purchased a US toll-free number (+1 8xx...) on Twilio which requires business ve
 **Workaround for development:**
 Use Supabase's built-in **Test Phone Numbers** feature instead of real SMS:
 1. Supabase → Authentication → Sign In / Providers → Phone → **Test Phone Numbers and OTPs**
-2. Add: `<phone>=<otp>` e.g. `18773356146=123456`
+2. Add: `<phone>=<otp>` e.g. `18773356146=171717`
 3. Set **Test OTPs Valid Until** to a future date
 4. Set **SMS OTP Expiry** to `3600`
 5. In the app enter `+18773356146` and use `123456` as the OTP — no SMS needed
