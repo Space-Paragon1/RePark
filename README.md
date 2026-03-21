@@ -1,7 +1,5 @@
 # RePark
 
-> **Work in progress** — MVP 1.0 is under active development.
-
 Privacy-preserving vehicle obstruction notification platform.
 
 RePark lets nearby users report vehicles that are blocking access, then relays anonymous alerts to registered vehicle owners — without exposing anyone's personal contact details.
@@ -35,6 +33,12 @@ RePark lets nearby users report vehicles that are blocking access, then relays a
 - Real-time updates via Supabase Realtime WebSocket — new alerts appear automatically without refreshing
 - Pull-to-refresh and auto-reload on tab focus
 
+### Push Notifications
+- Expo push notifications delivered when a registered plate is reported
+- Push token registered on login and stored server-side
+- Notifications fire even when the app is closed
+- Built and distributed via EAS Build (preview profile)
+
 ### Abuse Safeguards
 - Anonymous relay — reporter never sees owner identity
 - Rate limits and cooldowns enforced server-side
@@ -44,7 +48,7 @@ RePark lets nearby users report vehicles that are blocking access, then relays a
 ### Account Management
 - Export all personal data as JSON (GDPR-style)
 - Delete account — permanently removes all vehicles, reports, alerts, and auth record
-- Push token management for future notification delivery
+- Push token management
 
 ### Home Dashboard
 - Live stats: vehicles registered, pending alerts, reports filed
@@ -71,7 +75,9 @@ RePark lets nearby users report vehicles that are blocking access, then relays a
 | Database | PostgreSQL via Supabase |
 | Auth | Supabase Auth (Phone OTP + Twilio SMS) |
 | Real-time | Supabase Realtime (WebSocket) |
-| Hosting | Railway (backend), Expo Go (mobile dev) |
+| Push Notifications | Expo Push API + EAS Build |
+| CI/CD | GitHub Actions + EAS Build (auto-build on push to main) |
+| Hosting | Railway (backend), EAS (mobile builds) |
 | HTTP client | httpx (backend), fetch (mobile) |
 
 ---
@@ -80,45 +86,52 @@ RePark lets nearby users report vehicles that are blocking access, then relays a
 
 ```
 RePark/
-├── mobile/                   # Expo React Native app
-│   ├── app/
-│   │   ├── (auth)/           # Login + OTP verification screens
-│   │   └── (tabs)/           # Home, Report, Vehicles, Alerts, Profile
-│   ├── components/
-│   │   ├── PressableScale.tsx # Animated press-scale button wrapper
-│   │   ├── FadeInView.tsx     # Fade + slide-up entrance animation
-│   │   └── Skeleton.tsx       # Pulsing skeleton loader cards
-│   ├── contexts/             # AuthContext (session management)
-│   ├── lib/
-│   │   ├── api.ts            # Typed API client
-│   │   ├── supabase.ts       # Supabase client
-│   │   ├── notifications.ts  # Push notification helpers
-│   │   └── theme.ts          # Design tokens (colours, shadows, radii)
-│   └── .env                  # EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_API_URL
+├── .github/
+│   └── workflows/
+│       └── eas-build.yml         # Auto-build Android APK on push to main
 │
-├── backend/                  # FastAPI API
+├── mobile/                       # Expo React Native app
 │   ├── app/
-│   │   ├── routers/          # auth, vehicles, reports, alerts, push_tokens, account
-│   │   ├── schemas/          # Pydantic models
-│   │   ├── services/         # push.py (Expo Push API)
-│   │   ├── dependencies/     # JWT auth (JWKS)
-│   │   ├── db.py             # PostgREST helpers
+│   │   ├── (auth)/               # Login + OTP verification screens
+│   │   └── (tabs)/               # Home, Report, Vehicles, Alerts, Profile
+│   ├── assets/
+│   │   └── images/               # App icons and splash screen
+│   ├── components/
+│   │   ├── PressableScale.tsx    # Animated press-scale button wrapper
+│   │   ├── FadeInView.tsx        # Fade + slide-up entrance animation
+│   │   └── Skeleton.tsx          # Pulsing skeleton loader cards
+│   ├── contexts/                 # AuthContext (session management)
+│   ├── lib/
+│   │   ├── api.ts                # Typed API client
+│   │   ├── supabase.ts           # Supabase client
+│   │   ├── notifications.ts      # Push notification helpers
+│   │   └── theme.ts              # Design tokens (colours, shadows, radii)
+│   ├── eas.json                  # EAS Build profiles (development/preview/production)
+│   └── .env                      # EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_API_URL
+│
+├── backend/                      # FastAPI API
+│   ├── app/
+│   │   ├── routers/              # auth, vehicles, reports, alerts, push_tokens, account
+│   │   ├── schemas/              # Pydantic models
+│   │   ├── services/             # push.py (Expo Push API)
+│   │   ├── dependencies/         # JWT auth (JWKS)
+│   │   ├── db.py                 # PostgREST helpers
 │   │   └── main.py
-│   ├── tests/                # pytest test suite
-│   │   ├── test_reports.py   # Rate limit, cooldown, abuse block, pipeline
-│   │   ├── test_alerts.py    # List, respond, abuse logging
-│   │   └── test_auth.py      # 401/403 on unauthenticated requests
-│   ├── Procfile              # Railway deployment start command
-│   └── .env                  # Supabase credentials
+│   ├── tests/                    # pytest test suite
+│   │   ├── test_reports.py       # Rate limit, cooldown, abuse block, pipeline
+│   │   ├── test_alerts.py        # List, respond, abuse logging
+│   │   └── test_auth.py          # 401/403 on unauthenticated requests
+│   ├── Procfile                  # Railway deployment start command
+│   └── .env                      # Supabase credentials
 │
 ├── database/
-│   └── schema.sql            # Full database schema
+│   └── schema.sql                # Full database schema
 │
 └── docs/
     ├── PRODUCT_SPEC.md
     ├── SYSTEM_ARCHITECTURE.md
     ├── MVP_EXECUTION_PLAN.md
-    └── TROUBLESHOOTING.md    # All issues encountered and how they were fixed
+    └── TROUBLESHOOTING.md        # All issues encountered and how they were fixed
 ```
 
 ---
@@ -134,7 +147,7 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0
 ```
 
-### Mobile
+### Mobile (Expo Go — no push notifications)
 ```bash
 cd mobile
 npm install --legacy-peer-deps
@@ -143,7 +156,15 @@ npx expo start --tunnel
 
 Open in **Expo Go** (iOS/Android) by scanning the QR code.
 
-> **Note:** Push notifications require a development build (not Expo Go). Real-time alerts via Supabase Realtime work fully in Expo Go.
+> **Note:** Push notifications require an EAS preview/production build, not Expo Go.
+
+### Mobile (EAS Build — full features including push)
+```bash
+cd mobile
+eas build --profile preview --platform android
+```
+
+Download and install the APK from the link provided after the build completes.
 
 ### Running Tests
 ```bash
@@ -151,6 +172,24 @@ cd backend
 pip install -r requirements-dev.txt
 pytest tests/ -v
 ```
+
+---
+
+## CI/CD
+
+Every push to `main` automatically triggers an Android APK build via GitHub Actions + EAS Build.
+
+**Required GitHub secret:**
+| Secret | Description |
+|---|---|
+| `EXPO_TOKEN` | Expo access token (expo.dev → Account → Access Tokens) |
+
+**Required EAS environment variables** (set via `eas env:create` or expo.dev dashboard):
+| Variable | Environment | Visibility |
+|---|---|---|
+| `EXPO_PUBLIC_SUPABASE_URL` | preview | Plain text |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | preview | Sensitive |
+| `EXPO_PUBLIC_API_URL` | preview | Plain text |
 
 ---
 
@@ -171,7 +210,7 @@ Set the following environment variables in Railway → Variables:
 
 ## Environment Variables
 
-### `mobile/.env`
+### `mobile/.env` (local development only — not used in EAS builds)
 ```
 EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
@@ -195,7 +234,7 @@ SUPABASE_JWT_SECRET=your-jwt-secret
 | `vehicles` | Registered vehicles per user |
 | `reports` | Obstruction reports filed by users |
 | `alerts` | Notifications sent to vehicle owners |
-| `push_tokens` | Expo push tokens for future notifications |
+| `push_tokens` | Expo push tokens for notification delivery |
 | `abuse_events` | Flagged abuse incidents |
 
 Realtime is enabled on the `alerts` table (`supabase_realtime` publication).

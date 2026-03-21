@@ -244,6 +244,96 @@ Use Supabase's built-in **Test Phone Numbers** feature instead of real SMS:
 
 ---
 
+## 16. EAS Build fails at Prebuild — missing assets folder
+
+**Error:**
+> Unknown error. See logs of the Prebuild build phase for more information.
+
+**Cause:**
+The `mobile/assets/` folder did not exist, but `app.json` referenced `./assets/images/icon.png` for the `expo-notifications` plugin icon, and the Android adaptive icon had no `foregroundImage` set. EAS Prebuild failed when it tried to resolve these files.
+
+**Fix:**
+1. Created `mobile/assets/images/` directory
+2. Generated valid PNG files for all required assets: `icon.png` (1024×1024), `adaptive-icon.png` (1024×1024), `splash-icon.png`, `favicon.png`
+3. Updated `app.json` to add a top-level `"icon"` field and set `foregroundImage` on the Android adaptive icon
+
+---
+
+## 17. Development build crashes immediately — requires dev server
+
+**Issue:**
+After installing the EAS development build APK, the app would not open — it crashed on launch.
+
+**Cause:**
+A development build (`--profile development`) is not a standalone app. It requires the Expo dev server to be running on the same network to load JavaScript. Without it the app has nothing to run and crashes.
+
+**Fix:**
+Build with the `preview` profile instead, which produces a fully self-contained APK:
+```bash
+eas build --profile preview --platform android
+```
+
+---
+
+## 18. EAS Build ignores local .env file — app crashes with missing Supabase config
+
+**Issue:**
+Preview build installed fine but crashed immediately on launch with no error shown to the user.
+
+**Cause:**
+EAS builds run on Expo's remote servers which have no access to the local `.env` file. The build output confirmed this: `"No environment variables found for the preview environment on EAS"`. The app launched with undefined Supabase URL/keys and crashed trying to initialise the Supabase client.
+
+**Fix:**
+Add env vars directly to EAS using the CLI:
+```bash
+eas env:create --name EXPO_PUBLIC_SUPABASE_URL --value "..." --environment preview --visibility plaintext --non-interactive
+eas env:create --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "..." --environment preview --visibility sensitive --non-interactive
+eas env:create --name EXPO_PUBLIC_API_URL --value "..." --environment preview --visibility plaintext --non-interactive
+```
+Then rebuild. The `.env` file is only used for local `expo start` development.
+
+---
+
+## 19. getExpoPushTokenAsync missing projectId on Expo SDK 54
+
+**Issue:**
+Push token registration silently returned nothing — no token was saved to the backend.
+
+**Cause:**
+`Notifications.getExpoPushTokenAsync()` was called without a `projectId` argument. On Expo SDK 50+, this is required. Without it the call fails silently or returns an invalid token.
+
+**Fix:**
+Updated `mobile/lib/notifications.ts` to read the `projectId` from `app.json` via `expo-constants` and pass it explicitly:
+```ts
+import Constants from 'expo-constants';
+const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+const tokenData = await Notifications.getExpoPushTokenAsync(
+  projectId ? { projectId } : undefined,
+);
+```
+The `projectId` is populated automatically in `app.json` after running `eas init`.
+
+---
+
+## 20. GitHub Actions workflow not created by Expo automation
+
+**Issue:**
+After completing the Expo GitHub integration setup, no `.github/workflows/` file was created in the repository.
+
+**Cause:**
+The Expo automated setup did not finish generating the workflow file.
+
+**Fix:**
+Created `.github/workflows/eas-build.yml` manually. Key points:
+- Uses `EXPO_TOKEN` GitHub secret for authentication
+- Sets `working-directory: mobile` for all steps
+- Uses `--non-interactive` flag so the build doesn't pause waiting for input
+- Triggers on push to `main` branch only
+
+The `EXPO_TOKEN` must be created at expo.dev → Account → Access Tokens and added to the GitHub repo under Settings → Secrets → Actions.
+
+---
+
 ## General Lessons Learned
 
 - Always use `npx expo install` instead of `npm install` for Expo/React Native packages — it resolves the correct SDK-compatible version automatically
@@ -252,3 +342,7 @@ Use Supabase's built-in **Test Phone Numbers** feature instead of real SMS:
 - Physical device testing requires the PC's local IP, not `localhost`
 - Twilio Messaging Service SID starts with `MG...` — not `VA...` (Verify) or `AC...` (Account)
 - Set OTP expiry to a longer value during development
+- EAS builds do not read local `.env` files — set env vars via `eas env:create` for each environment
+- Use `--profile preview` for shareable standalone APKs; `--profile development` requires a running dev server
+- `getExpoPushTokenAsync()` requires an explicit `projectId` on SDK 50+
+- The `mobile/assets/` folder and all icon files must exist before running an EAS build
