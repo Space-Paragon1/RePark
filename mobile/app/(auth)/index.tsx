@@ -69,7 +69,7 @@ export default function PhoneScreen() {
         >
           {loading
             ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.buttonText}>Send Code →</Text>}
+            : <Text style={styles.buttonText}>Send Code</Text>}
         </PressableScale>
       </View>
     </KeyboardAvoidingView>

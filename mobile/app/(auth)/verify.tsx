@@ -79,7 +79,7 @@ export default function VerifyScreen() {
         >
           {loading
             ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.buttonText}>Verify & Sign In →</Text>}
+            : <Text style={styles.buttonText}>Verify & Sign In</Text>}
         </PressableScale>
 
         <PressableScale style={styles.resend} onPress={handleResend} disabled={resending}>
