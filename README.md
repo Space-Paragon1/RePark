@@ -1,5 +1,7 @@
 # RePark
 
+> **Work in progress** — MVP 1.0 is under active development.
+
 Privacy-preserving vehicle obstruction notification platform.
 
 RePark lets nearby users report vehicles that are blocking access, then relays anonymous alerts to registered vehicle owners — without exposing anyone's personal contact details.
