@@ -334,6 +334,19 @@ The `EXPO_TOKEN` must be created at expo.dev → Account → Access Tokens and a
 
 ---
 
+## Test Credentials
+
+For development and review purposes, the following Supabase test phone number and OTP are configured:
+
+| Field | Value |
+|---|---|
+| Phone number | `+18773356146` |
+| OTP code | `171717` |
+
+No real SMS is sent — enter these directly in the app's login and verification screens. Configured in Supabase → Authentication → Sign In / Providers → Phone → Test Phone Numbers and OTPs.
+
+---
+
 ## General Lessons Learned
 
 - Always use `npx expo install` instead of `npm install` for Expo/React Native packages — it resolves the correct SDK-compatible version automatically

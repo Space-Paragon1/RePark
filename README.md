@@ -138,6 +138,19 @@ RePark/
 
 ---
 
+## Test Credentials
+
+To log in and explore the app without real SMS verification, use these Supabase test credentials:
+
+| Field | Value |
+|---|---|
+| Phone number | `+18773356146` |
+| OTP code | `171717` |
+
+No SMS will be sent — enter these values directly in the login and verification screens.
+
+---
+
 ## Running Locally
 
 ### Backend
