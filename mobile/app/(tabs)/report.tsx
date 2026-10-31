@@ -35,8 +35,22 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
   notified:   { label: 'Owner Notified',   color: '#2563EB', bg: '#EFF6FF' },
   responded:  { label: 'Owner Responded',  color: '#16A34A', bg: '#F0FDF4' },
   rejected:   { label: 'Incorrect Report', color: '#DC2626', bg: '#FEF2F2' },
-  closed:     { label: 'Closed',           color: '#6B7280', bg: '#F3F4F6' },
+  closed:     { label: 'No Response',      color: '#6B7280', bg: '#F3F4F6' },
 };
+
+// Plate wasn't registered, so no alert went out. The backend waits 2 hours for
+// the owner to join, then closes the report.
+const NOT_REGISTERED = {
+  waiting: { label: 'Owner Not on RePark Yet', color: '#B45309', bg: '#FFFBEB' },
+  closed:  { label: 'Owner Not on RePark',     color: '#6B7280', bg: '#F3F4F6' },
+};
+
+function statusFor(report: Report) {
+  if (!report.owner_notified) {
+    return report.status === 'closed' ? NOT_REGISTERED.closed : NOT_REGISTERED.waiting;
+  }
+  return STATUS_CONFIG[report.status] ?? STATUS_CONFIG.submitted;
+}
 
 // ─── Success Card ─────────────────────────────────────────────────────────────
 
@@ -70,7 +84,7 @@ function SuccessCard({ report, onReset }: { report: Report; onReset: () => void 
         <Text style={styles.successSub}>
           {report.owner_notified
             ? 'The vehicle owner has been sent an anonymous alert.'
-            : 'This plate is not registered. Your report has been saved.'}
+            : "This plate isn't on RePark yet. If the owner registers it in the next 2 hours, we'll alert them."}
         </Text>
         <View style={styles.successDetails}>
           <View style={styles.detailRow}>
@@ -84,7 +98,7 @@ function SuccessCard({ report, onReset }: { report: Report; onReset: () => void 
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Status</Text>
             <Text style={[styles.detailValue, { color: report.owner_notified ? '#16A34A' : '#6B7280' }]}>
-              {report.owner_notified ? 'Owner notified' : 'Submitted'}
+              {report.owner_notified ? 'Owner notified' : 'Waiting for owner to join'}
             </Text>
           </View>
         </View>
@@ -100,7 +114,7 @@ function SuccessCard({ report, onReset }: { report: Report; onReset: () => void 
 
 function ReportHistoryItem({ report }: { report: Report }) {
   const issueLabel = ISSUE_TYPES.find(i => i.value === report.issue_type)?.label ?? report.issue_type;
-  const status = STATUS_CONFIG[report.status] ?? STATUS_CONFIG.submitted;
+  const status = statusFor(report);
   const date = new Date(report.created_at).toLocaleString();
 
   return (

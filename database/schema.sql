@@ -43,10 +43,12 @@ create table public.reports (
   issue_type       issue_type not null,
   message          text,
   status           report_status not null default 'submitted',
+  owner_notified   boolean not null default false,  -- an alert was created for this report
   created_at       timestamptz not null default now()
 );
 
-create index reports_plate_number_idx on public.reports (plate_number);
+create index reports_plate_number_idx   on public.reports (plate_number);
+create index reports_status_created_idx on public.reports (status, created_at);
 
 -- ─── alerts ──────────────────────────────────────────────────────────────────
 
@@ -61,6 +63,7 @@ create table public.alerts (
   vehicle_id      uuid not null references public.vehicles(id) on delete cascade,
   report_id       uuid not null references public.reports(id) on delete cascade,
   delivery_status delivery_status not null default 'pending',
+  delivery_channel text check (delivery_channel in ('push', 'sms')),  -- how the owner was reached
   owner_response  owner_response,
   responded_at    timestamptz,
   created_at      timestamptz not null default now()
@@ -138,3 +141,23 @@ create policy "Owners can read alerts for their own vehicles"
 -- ─── Realtime ─────────────────────────────────────────────────────────────────
 
 alter publication supabase_realtime add table public.alerts;
+
+-- ─── Close stale reports (needs the pg_cron extension) ───────────────────────
+-- Unregistered plate, no owner joined within 2 hours  → closed
+-- Owner notified, no response within 24 hours         → closed
+-- The 2 hours must match UNREGISTERED_WAIT_HOURS in backend/app/routers/reports.py.
+
+create or replace function public.close_stale_reports()
+returns void
+language sql
+as $$
+  update public.reports
+  set status = 'closed'
+  where (status = 'submitted' and created_at < now() - interval '2 hours')
+     or (status = 'notified'  and created_at < now() - interval '24 hours');
+$$;
+
+revoke execute on function public.close_stale_reports() from public, anon, authenticated;
+
+create extension if not exists pg_cron;
+select cron.schedule('close-stale-reports', '*/15 * * * *', 'select public.close_stale_reports()');

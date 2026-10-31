@@ -6,7 +6,7 @@ import { colors, radius, shadow } from '@/lib/theme';
 export function SkeletonBox({
   width, height, borderRadius = radius.sm, style,
 }: {
-  width?: number | string; height: number; borderRadius?: number; style?: StyleProp<ViewStyle>;
+  width?: ViewStyle['width']; height: number; borderRadius?: number; style?: StyleProp<ViewStyle>;
 }) {
   const opacity = useRef(new Animated.Value(0.35)).current;
 

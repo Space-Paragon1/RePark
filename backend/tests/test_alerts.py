@@ -48,16 +48,20 @@ async def test_respond_to_alert_success(client):
         patch("app.routers.alerts.db_select", new_callable=AsyncMock, return_value=[FAKE_VEHICLE]),
         patch("app.routers.alerts.db_query", new_callable=AsyncMock, side_effect=[
             [FAKE_ALERT],           # fetch alert by id
+            [FAKE_REPORT],          # fetch report to find the reporter
             [responded_alert],      # re-fetch for enriched response (alerts for vehicle)
             [FAKE_REPORT],          # report for enriched alert
         ]),
         patch("app.routers.alerts.db_update", new_callable=AsyncMock, return_value=[]),
         patch("app.routers.alerts.db_insert", new_callable=AsyncMock, return_value={}),
+        patch("app.routers.alerts.notify_reporter", new_callable=AsyncMock) as mock_notify,
     ):
         res = await client.post("/alerts/alert-1/respond", json={"response": "moving_now"})
 
     assert res.status_code == 200
     assert res.json()["owner_response"] == "moving_now"
+    # Reporter gets told the owner is moving
+    mock_notify.assert_awaited_once_with("user-abc123", "ABC123", "moving_now", "report-1")
 
 
 async def test_respond_to_alert_not_found(client):
@@ -99,6 +103,7 @@ async def test_incorrect_report_logs_abuse_event(client):
         ]),
         patch("app.routers.alerts.db_update", new_callable=AsyncMock, return_value=[]),
         patch("app.routers.alerts.db_insert", new_callable=AsyncMock, return_value={}) as mock_insert,
+        patch("app.routers.alerts.notify_reporter", new_callable=AsyncMock) as mock_notify,
     ):
         res = await client.post("/alerts/alert-1/respond", json={"response": "incorrect_report"})
 
@@ -110,6 +115,7 @@ async def test_incorrect_report_logs_abuse_event(client):
     assert call_args[0] == "abuse_events"
     assert call_args[1]["event_type"] == "incorrect_report"
     assert call_args[1]["user_id"] == "reporter-xyz"
+    assert mock_notify.call_args.args[0] == "reporter-xyz"
 
 
 async def test_non_incorrect_report_does_not_log_abuse(client):
@@ -120,11 +126,13 @@ async def test_non_incorrect_report_does_not_log_abuse(client):
         patch("app.routers.alerts.db_select", new_callable=AsyncMock, return_value=[FAKE_VEHICLE]),
         patch("app.routers.alerts.db_query", new_callable=AsyncMock, side_effect=[
             [FAKE_ALERT],
+            [FAKE_REPORT],
             [responded_alert],
             [FAKE_REPORT],
         ]),
         patch("app.routers.alerts.db_update", new_callable=AsyncMock, return_value=[]),
         patch("app.routers.alerts.db_insert", new_callable=AsyncMock) as mock_insert,
+        patch("app.routers.alerts.notify_reporter", new_callable=AsyncMock),
     ):
         res = await client.post("/alerts/alert-1/respond", json={"response": "moving_now"})
 

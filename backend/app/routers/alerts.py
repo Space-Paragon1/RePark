@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
 from app.db import db_insert, db_query, db_select, db_update
 from app.dependencies.auth import get_current_user
 from app.schemas.alerts import AlertDetail, RespondRequest
+from app.services.notify import notify_reporter
 
 router = APIRouter(prefix="/alerts", tags=["alerts"])
 
@@ -57,6 +58,7 @@ async def list_alerts(user: dict = Depends(get_current_user)) -> list[AlertDetai
 async def respond_to_alert(
     alert_id: str,
     body: RespondRequest,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ) -> AlertDetail:
     user_id: str = user["sub"]
@@ -95,17 +97,23 @@ async def respond_to_alert(
     )
     await db_update("reports", {"id": alert["report_id"]}, {"status": new_report_status})
 
-    # Log abuse event so the reporter accumulates violations
-    if body.response == "incorrect_report":
-        report_rows = await db_query("reports", {"id": f"eq.{alert['report_id']}"})
-        if report_rows:
-            reporter_id = report_rows[0]["reporter_user_id"]
+    report_rows = await db_query("reports", {"id": f"eq.{alert['report_id']}"})
+    if report_rows:
+        report = report_rows[0]
+
+        # Log abuse event so the reporter accumulates violations
+        if body.response == "incorrect_report":
             await db_insert("abuse_events", {
-                "user_id": reporter_id,
+                "user_id": report["reporter_user_id"],
                 "report_id": alert["report_id"],
                 "event_type": "incorrect_report",
                 "metadata": {"alert_id": alert_id},
             })
+
+        background_tasks.add_task(
+            notify_reporter,
+            report["reporter_user_id"], report["plate_number"], body.response.value, report["id"],
+        )
 
     # Return enriched alert
     enriched = await _alerts_for_user(user_id)

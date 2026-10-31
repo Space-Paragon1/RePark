@@ -1,16 +1,18 @@
 from datetime import datetime, timedelta, timezone
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
 from app.db import db_delete, db_insert, db_query, db_select
 from app.dependencies.auth import get_current_user
+from app.routers.reports import UNREGISTERED_WAIT_HOURS
 from app.schemas.vehicles import (
     PlateClaimCreate,
     PlateClaimResponse,
     VehicleCreate,
     VehicleResponse,
 )
+from app.services.notify import deliver_alert, open_alert
 
 router = APIRouter(prefix="/vehicles", tags=["vehicles"])
 
@@ -37,6 +39,7 @@ def _plate_taken() -> HTTPException:
 @router.post("", response_model=VehicleResponse, status_code=201)
 async def register_vehicle(
     body: VehicleCreate,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ) -> VehicleResponse:
     user_id: str = user["sub"]
@@ -75,6 +78,23 @@ async def register_vehicle(
         if e.response.status_code == status.HTTP_409_CONFLICT:
             raise _plate_taken()
         raise
+
+    # Reports filed on this plate shortly before it was registered still reach
+    # the new owner, so a reporter's effort isn't wasted.
+    since = (datetime.now(timezone.utc) - timedelta(hours=UNREGISTERED_WAIT_HOURS)).isoformat()
+    waiting = await db_query("reports", {
+        "plate_number": f"eq.{body.plate_number}",
+        "status": "eq.submitted",
+        "created_at": f"gte.{since}",
+    })
+    for report in waiting:
+        if report["reporter_user_id"] == user_id:
+            continue
+        alert = await open_alert(report["id"], record["id"])
+        background_tasks.add_task(
+            deliver_alert, alert["id"], user_id, body.plate_number, report["issue_type"], report["id"],
+        )
+
     return VehicleResponse(**record)
 
 

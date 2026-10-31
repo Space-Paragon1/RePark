@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 
-from tests.conftest import FAKE_USER, FAKE_VEHICLE
+from tests.conftest import FAKE_REPORT, FAKE_USER, FAKE_VEHICLE
 
 NEW_VEHICLE = {"plate_number": "abc-123", "make": "Toyota", "model": "Camry", "color": "Blue"}
 OTHER_OWNERS_VEHICLE = {**FAKE_VEHICLE, "id": "vehicle-other", "user_id": "someone-else"}
@@ -38,11 +38,37 @@ async def test_register_new_plate(client):
         patch("app.routers.vehicles.db_select", new_callable=AsyncMock, return_value=[]),
         patch("app.routers.vehicles.db_query", new_callable=AsyncMock, return_value=[]),
         patch("app.routers.vehicles.db_insert", new_callable=AsyncMock, return_value=FAKE_VEHICLE) as mock_insert,
+        patch("app.routers.vehicles.deliver_alert", new_callable=AsyncMock) as mock_deliver,
     ):
         res = await client.post("/vehicles", json=NEW_VEHICLE)
 
     assert res.status_code == 201
     assert mock_insert.call_args.args[1]["plate_number"] == "ABC123"
+    mock_deliver.assert_not_called()
+
+
+async def test_register_alerts_owner_about_recent_reports(client):
+    """Reports filed on the plate shortly before registration reach the new owner,
+    except reports the owner filed themselves."""
+    someone_elses_report = {**FAKE_REPORT, "reporter_user_id": "reporter-xyz"}
+    own_report = {**FAKE_REPORT, "id": "report-own"}
+    with (
+        patch("app.routers.vehicles.db_select", new_callable=AsyncMock, return_value=[]),
+        patch("app.routers.vehicles.db_query", new_callable=AsyncMock, side_effect=[
+            [],                                   # plate not registered yet
+            [someone_elses_report, own_report],   # recent unmatched reports
+        ]),
+        patch("app.routers.vehicles.db_insert", new_callable=AsyncMock, return_value=FAKE_VEHICLE),
+        patch("app.routers.vehicles.open_alert", new_callable=AsyncMock, return_value={"id": "alert-9"}) as mock_open,
+        patch("app.routers.vehicles.deliver_alert", new_callable=AsyncMock) as mock_deliver,
+    ):
+        res = await client.post("/vehicles", json=NEW_VEHICLE)
+
+    assert res.status_code == 201
+    mock_open.assert_awaited_once_with("report-1", "vehicle-1")
+    mock_deliver.assert_awaited_once_with(
+        "alert-9", FAKE_USER["sub"], "ABC123", "blocking_driveway", "report-1",
+    )
 
 
 async def test_register_plate_already_on_own_account(client):

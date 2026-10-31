@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
-from app.db import db_insert, db_query, db_update
+from app.db import db_insert, db_query
 from app.dependencies.auth import get_current_user
 from app.schemas.reports import ReportCreate, ReportResponse
-from app.services.push import send_push_notifications
+from app.services.notify import deliver_alert, open_alert
 
 ABUSE_BLOCK_THRESHOLD = 5
 ABUSE_WINDOW_HOURS = 24
@@ -15,10 +15,19 @@ router = APIRouter(prefix="/reports", tags=["reports"])
 RATE_LIMIT_PER_HOUR = 3
 COOLDOWN_MINUTES = 15
 
+# A report on an unregistered plate waits this long for the owner to register.
+# Keep in sync with close_stale_reports() in database/schema.sql.
+UNREGISTERED_WAIT_HOURS = 2
+
+
+def _to_response(record: dict) -> ReportResponse:
+    return ReportResponse(**{**record, "owner_notified": bool(record.get("owner_notified"))})
+
 
 @router.post("", response_model=ReportResponse, status_code=201)
 async def create_report(
     body: ReportCreate,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ) -> ReportResponse:
     user_id: str = user["sub"]
@@ -81,39 +90,19 @@ async def create_report(
         "status": "submitted",
     })
 
-    # ── Plate lookup → create alert if vehicle is registered ─────────────────
-    owner_notified = False
+    # ── Plate lookup → alert the owner if the vehicle is registered ──────────
+    # Delivery (push, then SMS) runs after the response so the reporter isn't kept waiting.
     vehicles = await db_query("vehicles", {"plate_number": f"eq.{body.plate_number}"})
-
     if vehicles:
         vehicle = vehicles[0]
-        await db_insert("alerts", {
-            "vehicle_id": vehicle["id"],
-            "report_id": report["id"],
-            "delivery_status": "pending",
-        })
-        await db_update("reports", {"id": report["id"]}, {"status": "notified"})
-        report["status"] = "notified"
-        owner_notified = True
-
-        # ── Push notification to vehicle owner ────────────────────────────────
-        token_rows = await db_query("push_tokens", {"user_id": f"eq.{vehicle['user_id']}"})
-        tokens = [r["token"] for r in token_rows]
-        issue_label = {
-            "blocking_driveway":    "Blocking driveway / access",
-            "construction_access":  "Construction access blocked",
-            "garbage_pickup":       "Garbage pickup obstruction",
-            "restricted_zone":      "Restricted parking zone",
-            "emergency_access":     "Emergency access blocked",
-        }.get(body.issue_type, body.issue_type)
-        await send_push_notifications(
-            tokens,
-            title=f"⚠️ Alert for {body.plate_number}",
-            body=issue_label,
-            data={"report_id": report["id"]},
+        alert = await open_alert(report["id"], vehicle["id"])
+        report.update(status="notified", owner_notified=True)
+        background_tasks.add_task(
+            deliver_alert,
+            alert["id"], vehicle["user_id"], body.plate_number, body.issue_type.value, report["id"],
         )
 
-    return ReportResponse(**report, owner_notified=owner_notified)
+    return _to_response(report)
 
 
 @router.get("", response_model=list[ReportResponse])
@@ -121,8 +110,11 @@ async def list_reports(
     user: dict = Depends(get_current_user),
 ) -> list[ReportResponse]:
     user_id: str = user["sub"]
-    records = await db_query("reports", {"reporter_user_id": f"eq.{user_id}"})
-    return [ReportResponse(**r, owner_notified=(r["status"] != "submitted")) for r in records]
+    records = await db_query("reports", {
+        "reporter_user_id": f"eq.{user_id}",
+        "order": "created_at.desc",
+    })
+    return [_to_response(r) for r in records]
 
 
 @router.get("/{report_id}", response_model=ReportResponse)
@@ -137,5 +129,4 @@ async def get_report(
     })
     if not records:
         raise HTTPException(status_code=404, detail="Report not found")
-    r = records[0]
-    return ReportResponse(**r, owner_notified=(r["status"] != "submitted"))
+    return _to_response(records[0])

@@ -36,11 +36,25 @@ RePark lets nearby users report vehicles that are blocking access, then relays a
 - Real-time updates via Supabase Realtime WebSocket — new alerts appear automatically without refreshing
 - Pull-to-refresh and auto-reload on tab focus
 
-### Push Notifications
-- Expo push notifications delivered when a registered plate is reported
-- Push token registered on login and stored server-side
-- Notifications fire even when the app is closed
-- Built and distributed via EAS Build (preview profile)
+### Alert Delivery
+- Owners get an Expo push notification when their plate is reported
+- **SMS fallback via Twilio** when the owner has no working push token (no app, notifications off, or push rejected)
+- Each alert records whether it was delivered and how (`push` or `sms`); failures are recorded, not ignored
+- Dead push tokens (app uninstalled) are removed automatically
+- Delivery runs after the report is saved, so reporters aren't kept waiting
+- Reporters get a push when the owner responds
+
+### Report Lifecycle
+| Situation | What happens |
+|---|---|
+| Plate registered | Owner alerted → status **Owner Notified** |
+| Owner responds | Status **Owner Responded** or **Incorrect Report**; reporter gets a push |
+| No response in 24 hours | Closed automatically → **No Response** |
+| Plate not registered | Reporter told straight away → **Owner Not on RePark Yet** |
+| Plate registered within 2 hours of the report | New owner still gets the alert |
+| Plate still not registered after 2 hours | Closed automatically → **Owner Not on RePark** |
+
+Automatic closing runs every 15 minutes in the database (`close_stale_reports()` via `pg_cron`).
 
 ### Abuse Safeguards
 - Anonymous relay — reporter never sees owner identity
@@ -116,13 +130,14 @@ RePark/
 │   ├── app/
 │   │   ├── routers/              # auth, vehicles, reports, alerts, push_tokens, account
 │   │   ├── schemas/              # Pydantic models
-│   │   ├── services/             # push.py (Expo Push API)
+│   │   ├── services/             # notify.py (push, SMS fallback, alert delivery)
 │   │   ├── dependencies/         # JWT auth (JWKS)
 │   │   ├── db.py                 # PostgREST helpers
 │   │   └── main.py
 │   ├── tests/                    # pytest test suite
 │   │   ├── test_reports.py       # Rate limit, cooldown, abuse block, pipeline
-│   │   ├── test_vehicles.py      # One owner per plate, ownership claims
+│   │   ├── test_vehicles.py      # One owner per plate, claims, late registration
+│   │   ├── test_notify.py        # Push, SMS fallback, delivery status
 │   │   ├── test_alerts.py        # List, respond, abuse logging
 │   │   └── test_auth.py          # 401/403 on unauthenticated requests
 │   ├── Procfile                  # Railway deployment start command
@@ -224,6 +239,14 @@ Set the following environment variables in Railway → Variables:
 | `SUPABASE_ANON_KEY` | Supabase anon/public key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
 | `SUPABASE_JWT_SECRET` | Supabase JWT secret |
+| `TWILIO_ACCOUNT_SID` | Twilio account SID (SMS fallback, optional) |
+| `TWILIO_AUTH_TOKEN` | Twilio auth token (SMS fallback, optional) |
+| `TWILIO_MESSAGING_SERVICE_SID` | Twilio Messaging Service to send from. Set this **or** `TWILIO_FROM_NUMBER` |
+| `TWILIO_FROM_NUMBER` | Twilio phone number to send from, e.g. `+15551234567` |
+
+Without the Twilio variables, alerts go out by push only. Failures are logged and the alert is marked `failed`.
+
+**Deploy order:** run any new database migration *before* deploying backend code that depends on it.
 
 ---
 
@@ -242,6 +265,11 @@ SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 SUPABASE_JWT_SECRET=your-jwt-secret
+
+# Optional: SMS fallback
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_MESSAGING_SERVICE_SID=   # or TWILIO_FROM_NUMBER
 ```
 
 ---
@@ -261,7 +289,7 @@ Realtime is enabled on the `alerts` table (`supabase_realtime` publication). Row
 
 ### Setting up or updating the database
 - **New database:** run `database/schema.sql` in the Supabase SQL editor.
-- **Existing database:** run each file in `database/migrations/` in order. Read the comments at the top of each file first.
+- **Existing database:** run each file in `database/migrations/` in order. Read the comments at the top of each file first. Run migrations before deploying the backend that needs them.
 
 ### Resolving plate ownership claims
 Claims are reviewed by hand in the Supabase SQL editor for now. List pending claims:

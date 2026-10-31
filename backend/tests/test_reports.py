@@ -54,31 +54,47 @@ async def test_unregistered_plate_not_notified(client):
     with (
         patch("app.routers.reports.db_query", new_callable=AsyncMock, side_effect=[[], [], [], []]),
         patch("app.routers.reports.db_insert", new_callable=AsyncMock, return_value=dict(FAKE_REPORT)),
-        patch("app.routers.reports.send_push_notifications", new_callable=AsyncMock) as mock_push,
+        patch("app.routers.reports.open_alert", new_callable=AsyncMock) as mock_open,
+        patch("app.routers.reports.deliver_alert", new_callable=AsyncMock) as mock_deliver,
     ):
         res = await client.post("/reports", json=REPORT_BODY)
 
     assert res.status_code == 201
     assert res.json()["owner_notified"] is False
-    mock_push.assert_not_called()
+    assert res.json()["status"] == "submitted"
+    mock_open.assert_not_called()
+    mock_deliver.assert_not_called()
 
 
-async def test_registered_plate_notifies_owner(client):
+async def test_registered_plate_alerts_owner(client):
     with (
         patch("app.routers.reports.db_query", new_callable=AsyncMock, side_effect=[
-            [], [], [],                      # abuse, hourly, cooldown checks
-            [FAKE_VEHICLE],                  # plate lookup
-            [{"token": "ExponentPushToken[x]"}],  # owner's push tokens
+            [], [], [],      # abuse, hourly, cooldown checks
+            [FAKE_VEHICLE],  # plate lookup
         ]),
-        patch("app.routers.reports.db_insert", new_callable=AsyncMock, side_effect=[dict(FAKE_REPORT), {}]) as mock_insert,
-        patch("app.routers.reports.db_update", new_callable=AsyncMock, return_value=[]),
-        patch("app.routers.reports.send_push_notifications", new_callable=AsyncMock) as mock_push,
+        patch("app.routers.reports.db_insert", new_callable=AsyncMock, return_value=dict(FAKE_REPORT)) as mock_insert,
+        patch("app.routers.reports.open_alert", new_callable=AsyncMock, return_value={"id": "alert-1"}) as mock_open,
+        patch("app.routers.reports.deliver_alert", new_callable=AsyncMock) as mock_deliver,
     ):
         res = await client.post("/reports", json=REPORT_BODY)
 
     assert res.status_code == 201
     assert res.json()["owner_notified"] is True
     assert res.json()["status"] == "notified"
-    assert mock_insert.call_args_list[0].args[1]["plate_number"] == "ABC123"
-    assert mock_insert.call_args_list[1].args[0] == "alerts"
-    assert mock_push.call_args.args[0] == ["ExponentPushToken[x]"]
+    assert mock_insert.call_args.args[1]["plate_number"] == "ABC123"
+    mock_open.assert_awaited_once_with("report-1", "vehicle-1")
+    # Delivery runs as a background task for the vehicle's owner
+    mock_deliver.assert_awaited_once_with(
+        "alert-1", "user-abc123", "ABC123", "blocking_driveway", "report-1",
+    )
+
+
+async def test_list_reports_uses_stored_owner_notified(client):
+    """A closed report only counts as notified if an alert was actually created."""
+    unmatched = {**FAKE_REPORT, "status": "closed", "owner_notified": False}
+    unanswered = {**FAKE_REPORT, "id": "report-2", "status": "closed", "owner_notified": True}
+    with patch("app.routers.reports.db_query", new_callable=AsyncMock, return_value=[unmatched, unanswered]):
+        res = await client.get("/reports")
+
+    assert res.status_code == 200
+    assert [r["owner_notified"] for r in res.json()] == [False, True]
