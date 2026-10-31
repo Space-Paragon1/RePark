@@ -4,7 +4,7 @@ import {
   ActivityIndicator, Alert, Modal, TextInput,
   KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
-import { Vehicle, VehicleCreate, vehiclesApi } from '@/lib/api';
+import { ApiError, Vehicle, VehicleCreate, vehiclesApi } from '@/lib/api';
 import { colors, shadow, radius } from '@/lib/theme';
 import { PressableScale } from '@/components/PressableScale';
 import { FadeInView } from '@/components/FadeInView';
@@ -34,9 +34,35 @@ function AddVehicleModal({ visible, onClose, onAdded }: {
       onAdded(vehicle);
       setForm({ plate_number: '', make: '', model: '', color: '', parking_zone: null });
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      if (e instanceof ApiError && e.code === 'plate_taken') {
+        Alert.alert('Plate already registered', e.message, [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'File a claim', onPress: fileClaim },
+        ]);
+      } else {
+        Alert.alert('Error', e.message);
+      }
     } finally {
       setSaving(false);
+    }
+  };
+
+  const fileClaim = async () => {
+    try {
+      await vehiclesApi.createClaim({
+        plate_number: form.plate_number,
+        make: form.make,
+        model: form.model,
+        color: form.color,
+      });
+      Alert.alert(
+        'Claim submitted',
+        "We'll review your claim. If it's approved, the plate will move to your account.",
+      );
+      setForm({ plate_number: '', make: '', model: '', color: '', parking_zone: null });
+      onClose();
+    } catch (e: any) {
+      Alert.alert('Error', e.message);
     }
   };
 

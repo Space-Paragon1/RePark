@@ -1,7 +1,16 @@
-import pytest
-from httpx import AsyncClient, ASGITransport
+import os
 
-from app.main import app
+# Placeholder settings so tests run without a real .env. Every test mocks the
+# database, so these values are never used for network calls.
+os.environ.setdefault("SUPABASE_URL", "https://test.supabase.co")
+os.environ.setdefault("SUPABASE_ANON_KEY", "test-anon-key")
+os.environ.setdefault("SUPABASE_SERVICE_ROLE_KEY", "test-service-role-key")
+os.environ.setdefault("SUPABASE_JWT_SECRET", "test-jwt-secret")
+
+import pytest  # noqa: E402
+from httpx import AsyncClient, ASGITransport  # noqa: E402
+
+from app.main import app  # noqa: E402
 from app.dependencies.auth import get_current_user
 
 FAKE_USER = {"sub": "user-abc123", "phone": "+1234567890"}

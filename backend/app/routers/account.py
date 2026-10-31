@@ -22,6 +22,11 @@ async def export_data(user: dict = Depends(get_current_user)) -> dict:
         batch = await db_query("alerts", {"vehicle_id": f"eq.{vehicle['id']}"})
         alerts.extend(batch)
 
+    claims = await db_query("plate_claims", {"claimant_user_id": f"eq.{user_id}"})
+    # Never export which vehicle (and so which other user) a claim was against.
+    for claim in claims:
+        claim.pop("current_vehicle_id", None)
+
     return {
         "user_id": user_id,
         "phone": user.get("phone"),
@@ -29,6 +34,7 @@ async def export_data(user: dict = Depends(get_current_user)) -> dict:
         "vehicles": vehicles,
         "reports": reports,
         "alerts": alerts,
+        "plate_claims": claims,
     }
 
 

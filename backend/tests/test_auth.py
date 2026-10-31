@@ -6,6 +6,8 @@ Tests that all protected endpoints reject unauthenticated requests.
 PROTECTED_ENDPOINTS = [
     ("GET",    "/vehicles"),
     ("POST",   "/vehicles"),
+    ("GET",    "/vehicles/claims"),
+    ("POST",   "/vehicles/claims"),
     ("GET",    "/reports"),
     ("POST",   "/reports"),
     ("GET",    "/alerts"),

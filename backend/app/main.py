@@ -10,6 +10,7 @@ app.add_middleware(
     allow_origins=["*"],  # tighten to specific origins before production
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Error-Code"],
 )
 
 app.include_router(auth.router)

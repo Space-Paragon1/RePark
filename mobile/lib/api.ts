@@ -2,6 +2,13 @@ import { supabase } from './supabase';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
 
+/** Error from the API. `code` comes from the X-Error-Code header, when sent. */
+export class ApiError extends Error {
+  constructor(message: string, public status: number, public code: string | null) {
+    super(message);
+  }
+}
+
 async function authHeaders(): Promise<Record<string, string>> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('Not authenticated');
@@ -25,7 +32,8 @@ async function request<T>(
 
   if (!res.ok) {
     const json = await res.json().catch(() => ({}));
-    throw new Error(json.detail ?? `Request failed: ${res.status}`);
+    const message = typeof json.detail === 'string' ? json.detail : `Request failed: ${res.status}`;
+    throw new ApiError(message, res.status, res.headers.get('X-Error-Code'));
   }
 
   if (res.status === 204) return undefined as T;
@@ -46,10 +54,27 @@ export type Vehicle = {
 
 export type VehicleCreate = Omit<Vehicle, 'id' | 'created_at'>;
 
+export type PlateClaimCreate = {
+  plate_number: string;
+  make: string;
+  model: string;
+  color: string;
+  note?: string | null;
+};
+
+export type PlateClaim = {
+  id: string;
+  plate_number: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+};
+
 export const vehiclesApi = {
   list: () => request<Vehicle[]>('GET', '/vehicles'),
   create: (data: VehicleCreate) => request<Vehicle>('POST', '/vehicles', data),
   delete: (id: string) => request<void>('DELETE', `/vehicles/${id}`),
+  createClaim: (data: PlateClaimCreate) => request<PlateClaim>('POST', '/vehicles/claims', data),
+  listClaims: () => request<PlateClaim[]>('GET', '/vehicles/claims'),
 };
 
 // ─── Reports ──────────────────────────────────────────────────────────────────

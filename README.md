@@ -18,7 +18,8 @@ RePark lets nearby users report vehicles that are blocking access, then relays a
 ### Vehicle Management
 - Register up to 10 vehicles (plate, make, model, colour, parking zone)
 - View and delete registered vehicles
-- Duplicate plate detection
+- One account per plate (enforced by a unique index), so every alert reaches exactly one owner
+- Ownership claims: if a plate is already registered to someone else, the user can file a claim for manual review
 
 ### Reporting
 - Report a vehicle by plate number with GPS location
@@ -121,6 +122,7 @@ RePark/
 │   │   └── main.py
 │   ├── tests/                    # pytest test suite
 │   │   ├── test_reports.py       # Rate limit, cooldown, abuse block, pipeline
+│   │   ├── test_vehicles.py      # One owner per plate, ownership claims
 │   │   ├── test_alerts.py        # List, respond, abuse logging
 │   │   └── test_auth.py          # 401/403 on unauthenticated requests
 │   ├── Procfile                  # Railway deployment start command
@@ -154,10 +156,11 @@ No SMS will be sent — enter these values directly in the login and verificatio
 ## Running Locally
 
 ### Backend
+Requires Python 3.12 (matches `runtime.txt`; the code does not run on 3.9).
 ```bash
 cd backend
-python -m venv venv
-venv\Scripts\activate
+python3.12 -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0
 ```
@@ -187,6 +190,7 @@ cd backend
 pip install -r requirements-dev.txt
 pytest tests/ -v
 ```
+Tests mock the database and don't need a `.env` file.
 
 ---
 
@@ -251,8 +255,36 @@ SUPABASE_JWT_SECRET=your-jwt-secret
 | `alerts` | Notifications sent to vehicle owners |
 | `push_tokens` | Expo push tokens for notification delivery |
 | `abuse_events` | Flagged abuse incidents |
+| `plate_claims` | Ownership disputes for plates registered to another account |
 
-Realtime is enabled on the `alerts` table (`supabase_realtime` publication).
+Realtime is enabled on the `alerts` table (`supabase_realtime` publication). Row Level Security policies limit each signed-in user to alerts for their own vehicles, so Realtime only delivers a user's own alerts.
+
+### Setting up or updating the database
+- **New database:** run `database/schema.sql` in the Supabase SQL editor.
+- **Existing database:** run each file in `database/migrations/` in order. Read the comments at the top of each file first.
+
+### Resolving plate ownership claims
+Claims are reviewed by hand in the Supabase SQL editor for now. List pending claims:
+```sql
+select * from plate_claims where status = 'pending' order by created_at;
+```
+To **approve** a claim, move the plate to the claimant. This deletes the previous holder's vehicle and its alert history.
+```sql
+begin;
+delete from vehicles where id = '<current_vehicle_id>';
+insert into vehicles (user_id, plate_number, make, model, color)
+  select claimant_user_id, plate_number, make, model, color
+  from plate_claims where id = '<claim_id>';
+update plate_claims set status = 'approved', reviewed_at = now() where id = '<claim_id>';
+update plate_claims set status = 'rejected', reviewed_at = now()
+  where plate_number = (select plate_number from plate_claims where id = '<claim_id>')
+    and status = 'pending' and id <> '<claim_id>';
+commit;
+```
+To **reject** a claim:
+```sql
+update plate_claims set status = 'rejected', reviewed_at = now() where id = '<claim_id>';
+```
 
 ---
 
