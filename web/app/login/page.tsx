@@ -18,7 +18,7 @@ export default function LoginPage() {
           <LoginForm />
         </Suspense>
       </Card>
-      <p className="mt-6 max-w-md text-center text-sm text-blue-100">
+      <p className="mt-6 max-w-md text-center text-sm text-blue-50">
         Your phone number is only used to sign you in and to alert you about your own car.
         It’s never shown to anyone.
       </p>

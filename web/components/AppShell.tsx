@@ -4,15 +4,16 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from './AuthProvider';
+import { BellIcon, CarIcon, FlagIcon, HomeIcon, UserIcon } from './icons';
 import { Logo, Spinner } from './ui';
 
 // `short` labels fit the phone tab bar.
 const NAV = [
-  { href: '/dashboard', label: 'Home',         short: 'Home',     icon: '⌂' },
-  { href: '/report',    label: 'Report a car', short: 'Report',   icon: '⚑' },
-  { href: '/vehicles',  label: 'My vehicles',  short: 'Vehicles', icon: '🚗' },
-  { href: '/alerts',    label: 'Alerts',       short: 'Alerts',   icon: '🔔' },
-  { href: '/account',   label: 'Account',      short: 'Account',  icon: '👤' },
+  { href: '/dashboard', label: 'Home',         short: 'Home',     Icon: HomeIcon },
+  { href: '/report',    label: 'Report a car', short: 'Report',   Icon: FlagIcon },
+  { href: '/vehicles',  label: 'My vehicles',  short: 'Vehicles', Icon: CarIcon },
+  { href: '/alerts',    label: 'Alerts',       short: 'Alerts',   Icon: BellIcon },
+  { href: '/account',   label: 'Account',      short: 'Account',  Icon: UserIcon },
 ];
 
 /** Header, navigation, and sign-in guard for every signed-in page. */
@@ -79,11 +80,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               key={item.href}
               href={item.href}
               aria-current={active ? 'page' : undefined}
-              className={`flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${
+              className={`flex flex-col items-center gap-1 py-2 text-[11px] font-medium ${
                 active ? 'text-brand' : 'text-ink-secondary'
               }`}
             >
-              <span aria-hidden className={`text-lg leading-none ${active ? '' : 'grayscale'}`}>{item.icon}</span>
+              <item.Icon className="size-6" />
               {item.short}
             </Link>
           );

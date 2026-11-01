@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { reportsApi, type IssueType, type Report } from '@/lib/api';
 import { ISSUE_TYPES, formatDateTime, issueLabel, reportStatus } from '@/lib/labels';
+import { useAutoRefresh } from '@/lib/useAutoRefresh';
 import { useLoad } from '@/lib/useLoad';
 import {
   Badge, Button, Card, EmptyState, ErrorBanner, Field, PageHeader, Spinner, inputClass,
 } from '@/components/ui';
+import { CheckIcon, ClockIcon } from '@/components/icons';
 
 type Location = { latitude: number; longitude: number; accuracy: number };
 
@@ -20,10 +22,17 @@ const LOCATION_ERRORS: Record<number, string> = {
 // Above this, the browser probably guessed from Wi-Fi or IP rather than GPS.
 const APPROXIMATE_METRES = 500;
 
+// How often to check for an owner's reply while a report is still open.
+const POLL_MS = 20_000;
+
 export function ReportView() {
   const initialPlate = useSearchParams().get('plate') ?? '';
   const history = useLoad(reportsApi.list);
   const [submitted, setSubmitted] = useState<Report | null>(null);
+
+  // Reports are open until the owner replies or they close automatically.
+  const waiting = !!history.data?.some(r => r.status === 'submitted' || r.status === 'notified');
+  useAutoRefresh(history.reload, { polling: waiting, everyMs: POLL_MS });
 
   return (
     <>
@@ -45,7 +54,12 @@ export function ReportView() {
       )}
 
       <section className="mt-12">
-        <h2 className="mb-3 text-lg font-semibold">Your reports</h2>
+        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h2 className="text-lg font-semibold">Your reports</h2>
+          {waiting && (
+            <p className="text-xs text-ink-muted">Updates automatically while this page is open</p>
+          )}
+        </div>
         <ErrorBanner message={history.error} />
         {history.loading && <Spinner className="size-6 text-brand" />}
         {history.data?.length === 0 && (
@@ -160,7 +174,9 @@ function ReportForm({ initialPlate, onSubmitted }: {
           {location ? (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-success-light px-4 py-3">
               <span className="text-sm text-success">
-                ✓ Location confirmed
+                <span className="inline-flex items-center gap-1.5 font-medium">
+                  <CheckIcon className="size-4" /> Location confirmed
+                </span>
                 {location.accuracy > APPROXIMATE_METRES && (
                   <span className="block text-warning">
                     Only approximate (within about {Math.round(location.accuracy / 100) / 10} km).
@@ -229,7 +245,13 @@ function ReportForm({ initialPlate, onSubmitted }: {
 function SubmittedCard({ report, onDone }: { report: Report; onDone: () => void }) {
   return (
     <Card className="p-8 text-center">
-      <p aria-hidden className="text-5xl">{report.owner_notified ? '✅' : '📋'}</p>
+      <span
+        className={`mx-auto grid size-16 place-items-center rounded-full ${
+          report.owner_notified ? 'bg-success-light text-success' : 'bg-warning-light text-warning'
+        }`}
+      >
+        {report.owner_notified ? <CheckIcon className="size-8" /> : <ClockIcon className="size-8" />}
+      </span>
       <h2 className="mt-4 text-xl font-bold">
         {report.owner_notified ? 'Owner alerted' : 'Report saved'}
       </h2>
