@@ -39,8 +39,13 @@ mobile/*.orig.*
 *.key
 *.p12
 *.jks
+*.p8
+*.mobileprovision
 google-services.json
 GoogleService-Info.plist
+# Apple signing files from `eas credentials` (credentials.json holds passwords)
+mobile/credentials.json
+mobile/credentials/
 
 # ─── Logs ─────────────────────────────────────────────────────────────────────
 *.log

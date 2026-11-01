@@ -100,15 +100,15 @@ Automatic closing runs every 15 minutes in the database (`close_stale_reports()`
 
 | Layer | Technology |
 |---|---|
-| Mobile | React Native 0.81 + Expo SDK 54 + TypeScript |
+| Mobile | React Native 0.88 + Expo SDK 58 + TypeScript |
 | Website | Next.js 16 + TypeScript + Tailwind CSS 4 |
-| Routing | Expo Router v6 |
+| Routing | Expo Router (SDK 58) |
 | Backend | FastAPI (Python) |
 | Database | PostgreSQL via Supabase |
 | Auth | Supabase Auth (Phone OTP + Twilio SMS) |
 | Real-time | Supabase Realtime (WebSocket) |
 | Push Notifications | Expo Push API + EAS Build |
-| CI/CD | GitHub Actions: backend tests, website build, EAS Android build |
+| CI/CD | GitHub Actions: backend tests, website build, EAS Android build, EAS iPhone build (started by hand) |
 | Hosting | Railway (backend), Vercel (website), EAS (mobile builds) |
 | HTTP client | httpx (backend), fetch (mobile) |
 
@@ -121,7 +121,7 @@ RePark/
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml                # Backend tests + website lint/build on every push
-│       └── eas-build.yml         # Auto-build Android APK on push to main
+│       └── eas-build.yml         # Android APK on push to main; iPhone build started by hand
 │
 ├── web/                          # Next.js website (see web/README.md)
 │   ├── app/
@@ -148,7 +148,7 @@ RePark/
 │   │   ├── notifications.ts      # Push notification helpers
 │   │   └── theme.ts              # Design tokens (colours, shadows, radii)
 │   ├── eas.json                  # EAS Build profiles (development/preview/production)
-│   └── .env                      # EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_API_URL
+│   └── .env.local                # From eas env:pull: Supabase URL/key, API URL (not committed)
 │
 ├── backend/                      # FastAPI API
 │   ├── app/
@@ -205,23 +205,36 @@ uvicorn app.main:app --reload --host 0.0.0.0
 ```
 
 ### Mobile (Expo Go — no push notifications)
+Requires Node.js 22.13+, 24.3+ or 26+, and the latest **Expo Go** on your phone. Expo Go only runs the newest Expo SDK, so the app's SDK has to match it.
 ```bash
 cd mobile
-npm install --legacy-peer-deps
-npx expo start --tunnel
+npm ci   # not "npm install --legacy-peer-deps": that strips packages from package-lock.json and breaks EAS builds
+npx eas-cli@latest login
+npx eas-cli@latest env:pull --environment preview   # writes .env.local
+npx expo start --go
 ```
 
-Open in **Expo Go** (iOS/Android) by scanning the QR code.
+Scan the QR code with the iPhone Camera app, or from Expo Go on Android. If your phone isn't on the same Wi-Fi as your computer, add `--tunnel`.
+
+> **Note:** Keep the `--go` flag. The project includes `expo-dev-client`, so without it the QR code tries to open a development build, and the iPhone camera shows "No usable data found".
 
 > **Note:** Push notifications require an EAS preview/production build, not Expo Go.
 
-### Mobile (EAS Build — full features including push)
+### Android (EAS Build — full features including push)
 ```bash
 cd mobile
 eas build --profile preview --platform android
 ```
 
 Download and install the APK from the link provided after the build completes.
+
+### iPhone (EAS Build → TestFlight)
+Needs a paid Apple Developer account. Run the first build from your own terminal, so EAS can sign in to Apple and create the signing certificates, push key and App Store Connect key:
+```bash
+cd mobile
+npx eas-cli@latest build --platform ios --profile production --auto-submit
+```
+After that, start iPhone builds from GitHub (see CI/CD below). Each build is sent to TestFlight.
 
 ### Website
 ```bash
@@ -248,6 +261,8 @@ Every push and pull request runs the backend tests and checks that the website t
 
 Every push to `main` also triggers an Android APK build via GitHub Actions + EAS Build.
 
+iPhone builds don't run on push, because each one uses EAS build credit. Start one by hand from GitHub → **Actions** → **EAS Build** → **Run workflow** → `ios`. It builds the `production` profile and sends it to TestFlight. It only works after the first iPhone build has been run from a terminal (see Running Locally).
+
 **Required GitHub secret:**
 | Secret | Description |
 |---|---|
@@ -256,9 +271,11 @@ Every push to `main` also triggers an Android APK build via GitHub Actions + EAS
 **Required EAS environment variables** (set via `eas env:create` or expo.dev dashboard):
 | Variable | Environment | Visibility |
 |---|---|---|
-| `EXPO_PUBLIC_SUPABASE_URL` | preview | Plain text |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | preview | Sensitive |
-| `EXPO_PUBLIC_API_URL` | preview | Plain text |
+| `EXPO_PUBLIC_SUPABASE_URL` | preview, production | Plain text |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | preview, production | Sensitive |
+| `EXPO_PUBLIC_API_URL` | preview, production | Plain text |
+
+Android test builds read `preview`. iPhone App Store builds read `production`, so they need the variables there too, or the app can't reach Supabase and crashes on launch.
 
 ---
 
@@ -291,7 +308,8 @@ Import the repo in Vercel, set **Root Directory** to `web`, and add `NEXT_PUBLIC
 
 ## Environment Variables
 
-### `mobile/.env` (local development only — not used in EAS builds)
+### `mobile/.env.local` (local development only — not used in EAS builds)
+Created by `eas env:pull` (see Running Locally), or write it by hand:
 ```
 EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
@@ -305,10 +323,14 @@ SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 SUPABASE_JWT_SECRET=your-jwt-secret
 
+# Websites allowed to call the API from a browser (comma-separated). Default: any.
+CORS_ORIGINS=http://localhost:3000
+
 # Optional: SMS fallback
 TWILIO_ACCOUNT_SID=
 TWILIO_AUTH_TOKEN=
 TWILIO_MESSAGING_SERVICE_SID=   # or TWILIO_FROM_NUMBER
+TWILIO_FROM_NUMBER=
 ```
 
 ---

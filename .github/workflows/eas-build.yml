@@ -32,9 +32,11 @@ jobs:
           cache: npm
           cache-dependency-path: mobile/package-lock.json
 
+      # npm ci installs exactly what package-lock.json lists and leaves the file
+      # unchanged. EAS checks that file strictly, so it must arrive unedited.
       - name: Install dependencies
         working-directory: mobile
-        run: npm install --legacy-peer-deps
+        run: npm ci
 
       - name: Build Android (preview)
         working-directory: mobile
@@ -59,7 +61,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: mobile
-        run: npm install --legacy-peer-deps
+        run: npm ci
 
       # The build runs on EAS's Macs, so this job doesn't need a macOS runner.
       - name: Build iOS (production) and submit to TestFlight
