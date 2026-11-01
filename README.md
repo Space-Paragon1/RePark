@@ -6,9 +6,23 @@ Privacy-preserving vehicle obstruction notification platform.
 
 RePark lets nearby users report vehicles that are blocking access, then relays anonymous alerts to registered vehicle owners — without exposing anyone's personal contact details.
 
+Available as an Android app, a website (for people who don't want to install an app), and soon an iPhone app. All three share one backend and one account system.
+
 ---
 
 ## What's Built (MVP 1.0)
+
+### Website (`web/`)
+- Public home page explaining RePark, with links to sign in, report, or register a car
+- Phone number + one-time code sign-in (same accounts as the app)
+- Report a car using the browser's location; `/report?plate=ABC123` pre-fills the plate
+- Register and remove vehicles, file ownership claims
+- Reply to alerts, with live updates
+- Download data, delete account, sign out
+- Works on desktop and phone browsers (bottom tab bar on phones)
+- Website-only owners get alerts by SMS, since they have no app for push notifications
+
+See [`web/README.md`](web/README.md) for details.
 
 ### Authentication
 - Phone number login with SMS OTP via Supabase Auth + Twilio
@@ -87,14 +101,15 @@ Automatic closing runs every 15 minutes in the database (`close_stale_reports()`
 | Layer | Technology |
 |---|---|
 | Mobile | React Native 0.81 + Expo SDK 54 + TypeScript |
+| Website | Next.js 16 + TypeScript + Tailwind CSS 4 |
 | Routing | Expo Router v6 |
 | Backend | FastAPI (Python) |
 | Database | PostgreSQL via Supabase |
 | Auth | Supabase Auth (Phone OTP + Twilio SMS) |
 | Real-time | Supabase Realtime (WebSocket) |
 | Push Notifications | Expo Push API + EAS Build |
-| CI/CD | GitHub Actions + EAS Build (auto-build on push to main) |
-| Hosting | Railway (backend), EAS (mobile builds) |
+| CI/CD | GitHub Actions: backend tests, website build, EAS Android build |
+| Hosting | Railway (backend), Vercel (website), EAS (mobile builds) |
 | HTTP client | httpx (backend), fetch (mobile) |
 
 ---
@@ -105,7 +120,16 @@ Automatic closing runs every 15 minutes in the database (`close_stale_reports()`
 RePark/
 ├── .github/
 │   └── workflows/
+│       ├── ci.yml                # Backend tests + website lint/build on every push
 │       └── eas-build.yml         # Auto-build Android APK on push to main
+│
+├── web/                          # Next.js website (see web/README.md)
+│   ├── app/
+│   │   ├── page.tsx              # Public home page
+│   │   ├── login/                # Phone + code sign-in
+│   │   └── (app)/                # Signed-in pages: dashboard, report, vehicles, alerts, account
+│   ├── components/               # AppShell (nav + sign-in guard), AuthProvider, UI pieces
+│   └── lib/                      # API client, Supabase client, labels
 │
 ├── mobile/                       # Expo React Native app
 │   ├── app/
@@ -199,6 +223,15 @@ eas build --profile preview --platform android
 
 Download and install the APK from the link provided after the build completes.
 
+### Website
+```bash
+cd web
+cp .env.example .env.local       # fill in Supabase URL/key and API URL
+npm install
+npm run dev                      # http://localhost:3000
+```
+Set `CORS_ORIGINS=http://localhost:3000` in `backend/.env` so the API accepts requests from it.
+
 ### Running Tests
 ```bash
 cd backend
@@ -211,7 +244,9 @@ Tests mock the database and don't need a `.env` file.
 
 ## CI/CD
 
-Every push to `main` automatically triggers an Android APK build via GitHub Actions + EAS Build.
+Every push and pull request runs the backend tests and checks that the website type-checks, lints, and builds (`.github/workflows/ci.yml`).
+
+Every push to `main` also triggers an Android APK build via GitHub Actions + EAS Build.
 
 **Required GitHub secret:**
 | Secret | Description |
@@ -239,12 +274,16 @@ Set the following environment variables in Railway → Variables:
 | `SUPABASE_ANON_KEY` | Supabase anon/public key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
 | `SUPABASE_JWT_SECRET` | Supabase JWT secret |
+| `CORS_ORIGINS` | Website URL(s) allowed to call the API, comma-separated, e.g. `https://repark.vercel.app`. Defaults to any site |
 | `TWILIO_ACCOUNT_SID` | Twilio account SID (SMS fallback, optional) |
 | `TWILIO_AUTH_TOKEN` | Twilio auth token (SMS fallback, optional) |
 | `TWILIO_MESSAGING_SERVICE_SID` | Twilio Messaging Service to send from. Set this **or** `TWILIO_FROM_NUMBER` |
 | `TWILIO_FROM_NUMBER` | Twilio phone number to send from, e.g. `+15551234567` |
 
 Without the Twilio variables, alerts go out by push only. Failures are logged and the alert is marked `failed`.
+
+### Website (Vercel)
+Import the repo in Vercel, set **Root Directory** to `web`, and add `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `NEXT_PUBLIC_API_URL`. After the first deploy, add the site's URL to `CORS_ORIGINS` on Railway.
 
 **Deploy order:** run any new database migration *before* deploying backend code that depends on it.
 

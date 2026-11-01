@@ -1,13 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.config import settings
 from app.routers import auth, vehicles, reports, alerts, push_tokens, account
 
 app = FastAPI(title="RePark API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # tighten to specific origins before production
+    allow_origins=settings.cors_origin_list,  # set CORS_ORIGINS to the website's URL
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["X-Error-Code"],
