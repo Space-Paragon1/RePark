@@ -1,9 +1,9 @@
 import { Redirect, Tabs } from 'expo-router';
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, View, StyleSheet, type ColorValue } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { colors } from '@/lib/theme';
 
-function TabIcon({ emoji, color, focused }: { emoji: string; color: string; focused: boolean }) {
+function TabIcon({ emoji, color, focused }: { emoji: string; color: ColorValue; focused: boolean }) {
   return (
     <View style={[s.iconWrap, focused && s.iconWrapActive]}>
       <Text style={s.iconText}>{emoji}</Text>

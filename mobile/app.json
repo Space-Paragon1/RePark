@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "scheme": "repark",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.repark.app",
