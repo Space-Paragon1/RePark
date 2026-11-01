@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/classical-8f5f3ff6-06f2-4f36-9e65-16b244a4bd1f/styles.css">
+<script src="_ds/classical-8f5f3ff6-06f2-4f36-9e65-16b244a4bd1f/_ds_bundle.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400..900&amp;family=Overpass+Mono:wght@400..700&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+</helmet>
+<div style="width:1880px;box-sizing:border-box;padding:56px;background:var(--rp-board,#E4E1D9);color:var(--rp-text,#0D1117);font-family:'Overpass',sans-serif;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--rp-line-strong);padding-bottom:16px"><span style="font:800 32px/1 'Overpass';letter-spacing:-0.02em">{{ title }}</span><span style="font:500 12px/1 'Overpass Mono';letter-spacing:0.12em;color:var(--rp-text-3)">UP TO 10 VEHICLES · ONE ACCOUNT PER PLATE</span></div>
+
+<span style="font:600 12px/1 'Overpass Mono';letter-spacing:0.14em;color:var(--rp-text-2)">IPHONE</span>
+<div style="display:flex;gap:40px;align-items:flex-start">
+
+<div style="display:flex;flex-direction:column;gap:14px"><div style="padding:10px;border-radius:62px;background:#0D1117;box-shadow:0 0 0 1px #3A4250"><div style="width:390px;height:844px;border-radius:52px;overflow:hidden;position:relative;background:var(--rp-bg);color:var(--rp-text);display:flex;flex-direction:column;font-family:-apple-system,'SF Pro Text',system-ui,sans-serif">
+  <div style="height:54px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 48px;font:600 16px/1 -apple-system,system-ui"><span>09:20</span><span style="position:absolute;left:134px;top:11px;width:122px;height:36px;border-radius:18px;background:#000"></span><span style="width:25px;height:12px;border:1.5px solid currentColor;border-radius:4px;box-sizing:border-box"></span></div>
+  <div style="height:44px;flex:none;display:flex;align-items:center;justify-content:flex-end;padding:0 12px;color:var(--rp-brand)"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="24" height="24" style="flex:none;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></span></div>
+  <div style="padding:0 16px;display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:800 34px/40px 'Overpass';letter-spacing:-0.02em">Vehicles</span><span style="font:500 12px/1 'Overpass Mono';color:var(--rp-text-3)">2 of 10</span></div>
+    <sc-for list="{{ vehicles }}" as="v" hint-placeholder-count="2">
+    <div style="border:1px solid var(--rp-line);border-radius:14px;background:var(--rp-surface);padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div style="width:190px;height:50px;border:2px solid var(--rp-text);border-radius:5px;display:flex;box-shadow:inset 0 0 0 2px var(--rp-surface),inset 0 0 0 3px var(--rp-line-strong)"><div style="width:13px;background:var(--rp-brand);border-radius:2px 0 0 2px"></div><div style="flex:1;display:flex;align-items:center;justify-content:center;font:600 23px/1 'Overpass Mono';letter-spacing:0.12em">{{ v.plate }}</div></div>
+      <span style="font:600 17px/1.2 -apple-system,system-ui">{{ v.car }}</span>
+      <div style="display:flex;justify-content:space-between;font:400 14px/1.3 -apple-system,system-ui;color:var(--rp-text-2)"><span>{{ v.area }}</span><span style="font:500 12px/1 'Overpass Mono';color:var(--rp-text-3)">{{ v.added }}</span></div>
+    </div>
+    </sc-for>
+    <span style="font:600 12px/1 'Overpass Mono';letter-spacing:0.12em;color:var(--rp-text-2);margin-top:6px">OWNERSHIP CLAIMS</span>
+    <div style="border:1px solid var(--rp-line);border-radius:14px;display:flex;align-items:center;gap:12px;padding:14px;background:var(--rp-surface)"><div style="height:28px;padding:0 9px;border:1.5px solid var(--rp-text);border-radius:4px;display:flex;align-items:center;font:600 15px/1 'Overpass Mono';letter-spacing:0.1em">7LMV 302</div><span style="flex:1;font:500 12px/1.3 'Overpass Mono';color:var(--rp-text-3)">Filed 31 Oct</span><span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 9px;border-radius:5px;background:var(--rp-brand-tint);color:var(--rp-brand);font:700 12px/1 'Overpass'"><svg viewBox="0 0 24 24" width="13" height="13" style="flex:none;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>Under review</span></div>
+  </div>
+  <div style="position:absolute;left:12px;right:12px;bottom:22px;height:62px;border-radius:31px;background:var(--rp-glass);backdrop-filter:blur(16px);border:1px solid var(--rp-line);display:grid;grid-template-columns:repeat(5,1fr);align-items:center;font:500 10px/1 -apple-system,system-ui;color:var(--rp-text-2)"><span style="text-align:center">Home</span><span style="text-align:center">Report</span><span style="text-align:center;color:var(--rp-brand)">Vehicles</span><span style="text-align:center">Alerts</span><span style="text-align:center">Profile</span></div>
+  <span style="position:absolute;left:128px;bottom:8px;width:134px;height:5px;border-radius:3px;background:var(--rp-text)"></span>
+</div></div><span style="font:500 12px/1.4 'Overpass Mono';color:var(--rp-text-3)">iOS · Vehicles · swipe a card left to remove</span></div>
+
+<div style="display:flex;flex-direction:column;gap:14px"><div style="padding:10px;border-radius:62px;background:#0D1117;box-shadow:0 0 0 1px #3A4250"><div style="width:390px;height:844px;border-radius:52px;overflow:hidden;position:relative;background:#05070A;color:var(--rp-text);display:flex;flex-direction:column;font-family:-apple-system,'SF Pro Text',system-ui,sans-serif">
+  <div style="position:absolute;left:0;right:0;top:56px;bottom:0;border-radius:14px 14px 0 0;background:var(--rp-surface);padding:14px 16px 0;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;font:400 17px/1 -apple-system,system-ui;color:var(--rp-brand)"><span>Cancel</span><span style="font:600 17px/1 -apple-system,system-ui;color:var(--rp-text)">Add a vehicle</span><span style="font-weight:600;opacity:.45">Add</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px"><span style="font:600 15px/1 -apple-system,system-ui">Plate</span><div style="height:72px;background:var(--rp-surface);border:2px solid var(--rp-stop);border-radius:6px;display:flex"><div style="width:18px;background:var(--rp-brand);border-radius:3px 0 0 3px"></div><div style="flex:1;display:flex;align-items:center;justify-content:center;font:600 32px/1 'Overpass Mono';letter-spacing:0.12em">7LMV 302</div></div></div>
+    <div style="display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:12px;border:1px solid var(--rp-stop);background:var(--rp-stop-tint)"><span style="display:flex;gap:8px;font:600 15px/1.35 -apple-system,system-ui"><span style="color:var(--rp-stop);display:flex"><svg viewBox="0 0 24 24" width="18" height="18" style="flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg></span>This plate is already registered to another account.</span><span style="font:400 14px/1.45 -apple-system,system-ui;color:var(--rp-text-2)">If it's your car, you can file an ownership claim. We review it and let you know. The other account isn't told who you are.</span><span style="height:46px;border-radius:10px;border:1.5px solid var(--rp-text);display:flex;align-items:center;justify-content:center;font:700 15px/1 'Overpass'">File a claim for 7LMV 302</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px;opacity:.45"><span style="font:600 15px/1 -apple-system,system-ui">Make and model</span><div style="height:48px;border:1.5px solid var(--rp-line-strong);border-radius:10px;display:flex;align-items:center;padding:0 14px;font:400 16px/1 -apple-system,system-ui;color:var(--rp-text-3)">Toyota Corolla</div></div>
+    <div style="display:flex;flex-direction:column;gap:6px;opacity:.45"><span style="font:600 15px/1 -apple-system,system-ui">Colour</span><div style="height:48px;border:1.5px solid var(--rp-line-strong);border-radius:10px;display:flex;align-items:center;padding:0 14px;font:400 16px/1 -apple-system,system-ui;color:var(--rp-text-3)">Silver</div></div>
+  </div>
+  <span style="position:absolute;left:128px;bottom:8px;width:134px;height:5px;border-radius:3px;background:var(--rp-text)"></span>
+</div></div><span style="font:500 12px/1.4 'Overpass Mono';color:var(--rp-text-3)">iOS · Add sheet · plate already registered, claim offered</span></div>
+
+<div style="display:flex;flex-direction:column;gap:14px"><div style="padding:10px;border-radius:62px;background:#0D1117;box-shadow:0 0 0 1px #3A4250"><div style="width:390px;height:844px;border-radius:52px;overflow:hidden;position:relative;background:#05070A;color:var(--rp-text);display:flex;flex-direction:column;font-family:-apple-system,'SF Pro Text',system-ui,sans-serif">
+  <div style="position:absolute;left:0;right:0;top:56px;bottom:0;border-radius:14px 14px 0 0;background:var(--rp-surface);padding:14px 16px 0;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;font:400 17px/1 -apple-system,system-ui;color:var(--rp-brand)"><span>Cancel</span><span style="font:600 17px/1 -apple-system,system-ui;color:var(--rp-text)">Add a vehicle</span><span style="font-weight:600">Add</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px"><span style="font:600 15px/1 -apple-system,system-ui">Plate</span><div style="height:72px;background:var(--rp-surface);border:2px solid var(--rp-text);border-radius:6px;display:flex;box-shadow:inset 0 0 0 3px var(--rp-surface),inset 0 0 0 4px var(--rp-line-strong)"><div style="width:18px;background:var(--rp-brand);border-radius:3px 0 0 3px"></div><div style="flex:1;display:flex;align-items:center;justify-content:center;font:600 32px/1 'Overpass Mono';letter-spacing:0.12em">9WEB 551</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 15px/1 -apple-system,system-ui">Make</span><div style="height:48px;border:1.5px solid var(--rp-line-strong);border-radius:10px;background:var(--rp-surface);display:flex;align-items:center;padding:0 14px;font:400 16px/1 -apple-system,system-ui">Honda</div></div><div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 15px/1 -apple-system,system-ui">Model</span><div style="height:48px;border:1.5px solid var(--rp-brand);border-radius:10px;background:var(--rp-surface);display:flex;align-items:center;padding:0 14px;font:400 16px/1 -apple-system,system-ui;box-shadow:0 0 0 4px var(--rp-brand-tint)">Civic<span style="width:1.5px;height:20px;background:var(--rp-brand);margin-left:2px"></span></div></div></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 15px/1 -apple-system,system-ui">Colour</span><div style="display:flex;gap:8px;flex-wrap:wrap"><sc-for list="{{ colours }}" as="c" hint-placeholder-count="6"><span style="height:36px;padding:0 12px;border-radius:18px;border:1.5px solid var(--rp-line-strong);display:flex;align-items:center;font:500 14px/1 -apple-system,system-ui">{{ c }}</span></sc-for><span style="height:36px;padding:0 12px;border-radius:18px;border:1.5px solid var(--rp-brand);background:var(--rp-brand-tint);color:var(--rp-brand);display:flex;align-items:center;font:600 14px/1 -apple-system,system-ui">Red</span></div></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 15px/1 -apple-system,system-ui">Usually parked <span style="font-weight:400;color:var(--rp-text-3)">optional</span></span><div style="height:48px;border:1.5px solid var(--rp-line-strong);border-radius:10px;background:var(--rp-surface);display:flex;align-items:center;padding:0 14px;font:400 16px/1 -apple-system,system-ui;color:var(--rp-text-3)">For example, Elm Street</div><span style="font:400 13px/1.4 -apple-system,system-ui;color:var(--rp-text-2)">Only for you, to tell your cars apart.</span></div>
+  </div>
+  <span style="position:absolute;left:128px;bottom:8px;width:134px;height:5px;border-radius:3px;background:var(--rp-text)"></span>
+</div></div><span style="font:500 12px/1.4 'Overpass Mono';color:var(--rp-text-3)">iOS · Add sheet · valid, Add enabled</span></div>
+
+<div style="display:flex;flex-direction:column;gap:14px"><div style="padding:10px;border-radius:62px;background:#0D1117;box-shadow:0 0 0 1px #3A4250"><div style="width:390px;height:844px;border-radius:52px;overflow:hidden;position:relative;background:#05070A;color:var(--rp-text);display:flex;flex-direction:column;font-family:-apple-system,'SF Pro Text',system-ui,sans-serif">
+  <div style="position:absolute;left:0;right:0;bottom:0;border-radius:22px 22px 0 0;background:var(--rp-surface);padding:10px 22px 44px;display:flex;flex-direction:column;gap:14px">
+    <span style="align-self:center;width:36px;height:5px;border-radius:3px;background:var(--rp-line-strong)"></span>
+    <span style="width:48px;height:48px;border-radius:50%;background:var(--rp-stop-tint);color:var(--rp-stop);display:flex;align-items:center;justify-content:center;margin-top:8px"><svg viewBox="0 0 24 24" width="22" height="22" style="flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg></span>
+    <span style="font:800 24px/1.2 'Overpass';letter-spacing:-0.01em">Remove 5HDW 880?</span>
+    <span style="font:400 17px/1.45 -apple-system,system-ui;color:var(--rp-text-2)">You'll stop getting alerts for this van. People who report it will be told the owner isn't on RePark.</span>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px"><span style="height:54px;border-radius:10px;background:var(--rp-stop);color:var(--rp-on-stop);display:flex;align-items:center;justify-content:center;font:700 17px/1 'Overpass'">Remove vehicle</span><span style="height:54px;border-radius:10px;border:1.5px solid var(--rp-text);display:flex;align-items:center;justify-content:center;font:700 17px/1 'Overpass'">Keep it</span></div>
+  </div>
+  <span style="position:absolute;left:128px;bottom:8px;width:134px;height:5px;border-radius:3px;background:var(--rp-text)"></span>
+</div></div><span style="font:500 12px/1.4 'Overpass Mono';color:var(--rp-text-3)">iOS · Remove · confirmation sheet, never confirm()</span></div>
+</div>
+
+<span style="font:600 12px/1 'Overpass Mono';letter-spacing:0.14em;color:var(--rp-text-2);margin-top:24px">ANDROID · PROFILE AND ACCOUNT</span>
+<div style="display:flex;gap:40px;align-items:flex-start">
+
+<div style="display:flex;flex-direction:column;gap:14px"><div style="padding:8px;border-radius:44px;background:#0D1117;box-shadow:0 0 0 1px #3A4250"><div style="width:392px;height:852px;border-radius:36px;overflow:hidden;position:relative;background:var(--rp-bg);color:var(--rp-text);display:flex;flex-direction:column;font-family:Roboto,system-ui,sans-serif">
+  <div style="height:40px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 24px;font:500 14px/1 Roboto,system-ui;position:relative"><span>09:20</span><span style="position:absolute;left:186px;top:10px;width:20px;height:20px;border-radius:50%;background:#000"></span><span style="width:9px;height:15px;border:1.5px solid currentColor;border-radius:2px;box-sizing:border-box"></span></div>
+  <div style="padding:16px 16px 0;display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:800 32px/38px 'Overpass';letter-spacing:-0.02em">Vehicles</span><span style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;color:var(--rp-brand)"><svg viewBox="0 0 24 24" width="24" height="24" style="flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></span></div>
+    <sc-for list="{{ vehicles }}" as="v" hint-placeholder-count="2">
+    <div style="border:1px solid var(--rp-line);border-radius:14px;background:var(--rp-surface);padding:16px;display:flex;align-items:center;gap:14px"><div style="width:150px;height:42px;flex:none;border:2px solid var(--rp-text);border-radius:5px;display:flex;box-shadow:inset 0 0 0 2px var(--rp-surface),inset 0 0 0 3px var(--rp-line-strong)"><div style="width:11px;background:var(--rp-brand)"></div><div style="flex:1;display:flex;align-items:center;justify-content:center;font:600 19px/1 'Overpass Mono';letter-spacing:0.1em">{{ v.plate }}</div></div><div style="flex:1;display:flex;flex-direction:column;gap:4px"><span style="font:500 15px/1.2 Roboto,system-ui">{{ v.car }}</span><span style="font:500 11px/1 'Overpass Mono';color:var(--rp-text-3)">{{ v.added }}</span></div><span style="width:40px;height:48px;display:flex;align-items:center;justify-content:center;color:var(--rp-text-2)"><svg viewBox="0 0 24 24" width="20" height="20" style="flex:none;fill:currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></span></div>
+    </sc-for>
+    <span style="font:600 12px/1 'Overpass Mono';letter-spacing:0.12em;color:var(--rp-text-2);margin-top:6px">OWNERSHIP CLAIMS</span>
+    <div style="border:1px solid var(--rp-line);border-radius:14px;background:var(--rp-surface)">
+      <div style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--rp-line)"><div style="height:28px;padding:0 9px;border:1.5px solid var(--rp-text);border-radius:4px;display:flex;align-items:center;font:600 15px/1 'Overpass Mono';letter-spacing:0.1em">7LMV 302</div><span style="flex:1;font:500 11px/1.3 'Overpass Mono';color:var(--rp-text-3)">Filed 31 Oct</span><span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 9px;border-radius:5px;background:var(--rp-brand-tint);color:var(--rp-brand);font:700 12px/1 'Overpass'">Under review</span></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--rp-line)"><div style="height:28px;padding:0 9px;border:1.5px solid var(--rp-text);border-radius:4px;display:flex;align-items:center;font:600 15px/1 'Overpass Mono';letter-spacing:0.1em">5HDW 880</div><span style="flex:1;font:500 11px/1.3 'Overpass Mono';color:var(--rp-text-3)">Filed 12 Jun</span><span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 9px;border-radius:5px;background:var(--rp-go-tint);color:var(--rp-go);font:700 12px/1 'Overpass'"><svg viewBox="0 0 24 24" width="13" height="13" style="flex:none;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5"></path></svg>Approved</span></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px"><div style="height:28px;padding:0 9px;border:1.5px solid var(--rp-text);border-radius:4px;display:flex;align-items:center;font:600 15px/1 'Overpass Mono';letter-spacing:0.1em">1QRS 004</div><span style="flex:1;font:500 11px/1.3 'Overpass Mono';color:var(--rp-text-3)">Filed 2 Apr</span><span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 9px;border-radius:5px;background:var(--rp-stop-tint);color:var(--rp-stop);font:700 12px/1 'Overpass'"><svg viewBox="0 0 24 24" width="13" height="13" style="flex:none;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>Not approved</span></div>
+    </div>
+  </div>
+  <div style="position:absolute;left:0;right:0;bottom:0;height:96px;background:var(--rp-sunken);display:grid;grid-template-columns:repeat(4,1fr);padding-top:20px;font:500 12px/1 Roboto,system-ui;color:var(--rp-text-2);text-align:center"><span>Home</span><span style="color:var(--rp-text);font-weight:700">Vehicles</span><span>Alerts</span><span>Profile</span></div>
+</div></div><span style="font:500 12px/1.4 'Overpass Mono';color:var(--rp-text-3)">Android · Vehicles and claims · overflow menu for Remove</span></div>
+
+<div style="display:flex;flex-direction:column;gap:14px"><div style="padding:8px;border-radius:44px;background:#0D1117;box-shadow:0 0 0 1px #3A4250"><div style="width:392px;height:852px;border-radius:36px;overflow:hidden;position:relative;background:var(--rp-bg);color:var(--rp-text);display:flex;flex-direction:column;font-family:Roboto,system-ui,sans-serif">
+  <div style="height:40px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 24px;font:500 14px/1 Roboto,system-ui;position:relative"><span>09:21</span><span style="position:absolute;left:186px;top:10px;width:20px;height:20px;border-radius:50%;background:#000"></span><span style="width:9px;height:15px;border:1.5px solid currentColor;border-radius:2px;box-sizing:border-box"></span></div>
+  <div style="padding:16px 16px 0;display:flex;flex-direction:column;gap:14px">
+    <span style="font:800 32px/38px 'Overpass';letter-spacing:-0.02em">Profile</span>
+    <div style="border:1px solid var(--rp-line);border-radius:14px;background:var(--rp-surface)">
+      <sc-for list="{{ profileRows }}" as="p" hint-placeholder-count="4"><div style="min-height:56px;display:flex;align-items:center;gap:14px;padding:8px 16px;border-bottom:1px solid var(--rp-line)"><div style="flex:1;display:flex;flex-direction:column;gap:4px"><span style="font:500 16px/1.2 Roboto,system-ui">{{ p.label }}</span><span style="font:400 13px/1.3 Roboto,system-ui;color:var(--rp-text-2)">{{ p.sub }}</span></div><span style="font:500 13px/1 'Overpass Mono';color:var(--rp-text-3)">{{ p.value }}</span></div></sc-for>
+      <div style="height:56px;display:flex;align-items:center;gap:14px;padding:0 16px;font:500 16px/1 Roboto,system-ui">Sign out</div>
+    </div>
+    <div style="height:56px;border:1px solid var(--rp-line);border-radius:14px;background:var(--rp-surface);display:flex;align-items:center;padding:0 16px;font:500 16px/1 Roboto,system-ui;color:var(--rp-stop)">Delete account</div>
+    <span style="font:400 13px/1.45 Roboto,system-ui;color:var(--rp-text-3);padding:0 4px">RePark doesn't use a name, photo or password. Your phone number is the account.</span>
+  </div>
+  <div style="position:absolute;left:0;right:0;bottom:0;height:96px;background:var(--rp-sunken);display:grid;grid-template-columns:repeat(4,1fr);padding-top:20px;font:500 12px/1 Roboto,system-ui;color:var(--rp-text-2);text-align:center"><span>Home</span><span>Vehicles</span><span>Alerts</span><span style="color:var(--rp-text);font-weight:700">Profile</span></div>
+</div></div><span style="font:500 12px/1.4 'Overpass Mono';color:var(--rp-text-3)">Android · Profile · iOS uses the same rows in a grouped list</span></div>
+
+<div style="display:flex;flex-direction:column;gap:14px"><div style="padding:8px;border-radius:44px;background:#0D1117;box-shadow:0 0 0 1px #3A4250"><div style="width:392px;height:852px;border-radius:36px;overflow:hidden;position:relative;background:var(--rp-bg);color:var(--rp-text);display:flex;flex-direction:column;font-family:Roboto,system-ui,sans-serif">
+  <div style="position:absolute;inset:0;background:rgba(5,7,10,.55)"></div>
+  <div style="position:absolute;left:24px;right:24px;top:180px;border-radius:28px;background:var(--rp-surface);padding:24px;display:flex;flex-direction:column;gap:14px">
+    <span style="font:800 24px/1.2 'Overpass';letter-spacing:-0.01em">Delete your account?</span>
+    <span style="font:400 15px/1.5 Roboto,system-ui;color:var(--rp-text-2)">This removes your phone number, your 2 vehicles and your report history. People who report your cars will be told the owner isn't on RePark. This can't be undone.</span>
+    <div style="display:flex;flex-direction:column;gap:6px"><div style="position:relative;height:56px;border:2px solid var(--rp-stop);border-radius:10px;display:flex;align-items:center;padding:0 14px;font:600 18px/1 'Overpass Mono';letter-spacing:0.14em"><span style="position:absolute;top:-9px;left:10px;padding:0 4px;background:var(--rp-surface);font:500 12px/1 Roboto,system-ui;letter-spacing:0;color:var(--rp-stop)">Type DELETE to confirm</span>DELETE<span style="width:1.5px;height:22px;background:var(--rp-stop);margin-left:2px"></span></div></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px"><span style="height:48px;padding:0 16px;display:flex;align-items:center;font:500 15px/1 Roboto,system-ui;color:var(--rp-brand)">Cancel</span><span style="height:48px;padding:0 20px;border-radius:10px;background:var(--rp-stop);color:var(--rp-on-stop);display:flex;align-items:center;font:700 15px/1 'Overpass'">Delete account</span></div>
+  </div>
+</div></div><span style="font:500 12px/1.4 'Overpass Mono';color:var(--rp-text-3)">Android · Delete · button enables only when DELETE matches</span></div>
+</div>
+
+<span style="font:600 12px/1 'Overpass Mono';letter-spacing:0.14em;color:var(--rp-text-2);margin-top:24px">WEB · /vehicles AND /account</span>
+<div style="display:flex;gap:48px;align-items:flex-start">
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="width:860px;border-radius:12px;overflow:hidden;border:1px solid var(--rp-line-strong);background:var(--rp-bg);box-shadow:0 6px 20px rgba(13,17,23,.12)">
+  <div style="height:56px;border-bottom:1px solid var(--rp-line);background:var(--rp-surface);display:flex;align-items:center;gap:20px;padding:0 32px;font:600 14px/1 'Overpass';color:var(--rp-text-2)"><span style="font:800 18px/1 'Overpass';color:var(--rp-text);margin-right:12px">RePark</span><span>Dashboard</span><span>Reports</span><span style="color:var(--rp-text);box-shadow:inset 0 -2px 0 var(--rp-brand);padding:20px 0">Vehicles</span><span>Alerts</span></div>
+  <div style="padding:40px 32px;display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end"><h1 style="margin:0;font:800 40px/44px 'Overpass';letter-spacing:-0.03em">Vehicles</h1><span style="height:44px;padding:0 16px;border-radius:10px;border:1.5px solid var(--rp-text);display:flex;align-items:center;gap:8px;font:700 14px/1 'Overpass'"><svg viewBox="0 0 24 24" width="16" height="16" style="flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>Add a vehicle</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><sc-for list="{{ vehicles }}" as="v" hint-placeholder-count="2"><div style="border:1px solid var(--rp-line);border-radius:14px;background:var(--rp-surface);padding:18px;display:flex;flex-direction:column;gap:12px"><div style="display:flex;justify-content:space-between"><div style="width:190px;height:50px;border:2px solid var(--rp-text);border-radius:5px;display:flex;box-shadow:inset 0 0 0 2px var(--rp-surface),inset 0 0 0 3px var(--rp-line-strong)"><div style="width:13px;background:var(--rp-brand)"></div><div style="flex:1;display:flex;align-items:center;justify-content:center;font:600 23px/1 'Overpass Mono';letter-spacing:0.12em">{{ v.plate }}</div></div><span style="height:40px;padding:0 10px;display:flex;align-items:center;font:700 14px/1 'Overpass';color:var(--rp-stop)">Remove</span></div><b style="font:700 17px/1.2 'Overpass'">{{ v.car }}</b><span style="font:500 12px/1 'Overpass Mono';color:var(--rp-text-3)">{{ v.added }}</span></div></sc-for></div>
+    <span style="font:600 12px/1 'Overpass Mono';letter-spacing:0.12em;color:var(--rp-text-2);margin-top:8px">OWNERSHIP CLAIMS</span>
+    <div style="border:1px solid var(--rp-line);border-radius:14px;display:flex;align-items:center;gap:16px;padding:16px;background:var(--rp-surface)"><div style="height:28px;padding:0 9px;border:1.5px solid var(--rp-text);border-radius:4px;display:flex;align-items:center;font:600 15px/1 'Overpass Mono';letter-spacing:0.1em">7LMV 302</div><span style="flex:1;font:400 14px/1.4 'Overpass';color:var(--rp-text-2)">We're checking this claim. The status updates here.</span><span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 9px;border-radius:5px;background:var(--rp-brand-tint);color:var(--rp-brand);font:700 12px/1 'Overpass'">Under review</span></div>
+  </div>
+</div>
+<span style="font:500 12px/1.4 'Overpass Mono';color:var(--rp-text-3)">Web · desktop · vehicles and claims</span>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="width:860px;border-radius:12px;overflow:hidden;border:1px solid var(--rp-line-strong);background:var(--rp-bg);box-shadow:0 6px 20px rgba(13,17,23,.12)">
+  <div style="height:56px;border-bottom:1px solid var(--rp-line);background:var(--rp-surface);display:flex;align-items:center;gap:20px;padding:0 32px;font:600 14px/1 'Overpass';color:var(--rp-text-2)"><span style="font:800 18px/1 'Overpass';color:var(--rp-text);margin-right:12px">RePark</span><span>Dashboard</span><span>Reports</span><span>Vehicles</span><span>Alerts</span><span style="margin-left:auto;color:var(--rp-text)">Account</span></div>
+  <div style="padding:40px 32px;display:flex;flex-direction:column;gap:20px;max-width:620px">
+    <h1 style="margin:0;font:800 40px/44px 'Overpass';letter-spacing:-0.03em">Account</h1>
+    <div style="border:1px solid var(--rp-line);border-radius:14px;background:var(--rp-surface)">
+      <div style="display:flex;align-items:center;padding:18px 20px;border-bottom:1px solid var(--rp-line)"><div style="flex:1;display:flex;flex-direction:column;gap:4px"><b style="font:700 15px/1.2 'Overpass'">Phone number</b><span style="font:500 14px/1 'Overpass Mono';color:var(--rp-text-2)">+1 415 555 0123</span></div></div>
+      <div style="display:flex;align-items:center;gap:16px;padding:18px 20px;border-bottom:1px solid var(--rp-line)"><div style="flex:1;display:flex;flex-direction:column;gap:4px"><b style="font:700 15px/1.2 'Overpass'">Download my data</b><span style="font:400 14px/1.4 'Overpass';color:var(--rp-text-2)">A copy of your vehicles, reports and alerts.</span></div><span style="height:40px;padding:0 14px;border-radius:10px;border:1.5px solid var(--rp-text);display:flex;align-items:center;gap:8px;font:700 14px/1 'Overpass'"><svg viewBox="0 0 24 24" width="16" height="16" style="flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg>Download</span></div>
+      <div style="display:flex;align-items:center;padding:18px 20px"><b style="flex:1;font:700 15px/1.2 'Overpass'">Sign out</b><span style="font:700 14px/1 'Overpass';color:var(--rp-brand);padding:10px">Sign out</span></div>
+    </div>
+    <div style="border:1px solid var(--rp-stop);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px"><b style="font:700 17px/1.2 'Overpass';color:var(--rp-stop)">Delete account</b><span style="font:400 14px/1.5 'Overpass';color:var(--rp-text-2)">Removes your phone number, vehicles and history. This can't be undone.</span><label style="font:600 14px/1 'Overpass'">Type DELETE to confirm</label><div style="display:flex;gap:10px"><div style="flex:1;height:48px;border:1.5px solid var(--rp-line-strong);border-radius:10px;background:var(--rp-surface);display:flex;align-items:center;padding:0 14px;font:600 16px/1 'Overpass Mono';letter-spacing:0.14em">DEL<span style="width:1.5px;height:20px;background:var(--rp-brand);margin-left:2px"></span></div><span style="height:48px;padding:0 18px;border-radius:10px;background:var(--rp-stop);color:var(--rp-on-stop);display:flex;align-items:center;font:700 14px/1 'Overpass';opacity:.45">Delete account</span></div></div>
+  </div>
+</div>
+<span style="font:500 12px/1.4 'Overpass Mono';color:var(--rp-text-3)">Web · desktop · account, delete stays disabled until DELETE</span>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1880,&quot;height&quot;:2600},&quot;themeName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Light&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      title: 'Vehicles, claims and account · ' + (this.props.themeName ?? 'Light'),
+      vehicles: [
+        { plate: '8KTR 214', car: 'Silver Toyota Corolla', area: 'Usually on Elm Street', added: 'Added 3 Mar 2026' },
+        { plate: '5HDW 880', car: 'Blue Ford Transit', area: 'Usually at the yard', added: 'Added 19 Jun 2026' }
+      ],
+      colours: ['Black', 'White', 'Silver', 'Blue'],
+      profileRows: [
+        { label: 'Phone number', sub: 'Used to sign in and for texts', value: '+1 ••• 0123' },
+        { label: 'Notifications', sub: 'Alerts about your cars and reports', value: 'On' },
+        { label: 'Download my data', sub: 'Vehicles, reports and alerts', value: '' },
+        { label: 'Privacy and terms', sub: '', value: '' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

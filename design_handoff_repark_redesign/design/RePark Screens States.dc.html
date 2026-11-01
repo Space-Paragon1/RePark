@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/classical-8f5f3ff6-06f2-4f36-9e65-16b244a4bd1f/styles.css">
+<script src="_ds/classical-8f5f3ff6-06f2-4f36-9e65-16b244a4bd1f/_ds_bundle.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400..900&amp;family=Overpass+Mono:wght@400..700&amp;display=swap">
+</helmet>
+<div style="width:1880px;box-sizing:border-box;padding:56px;background:var(--rp-board,#E4E1D9);color:var(--rp-text,#0D1117);font-family:'Overpass',sans-serif;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--rp-line-strong);padding-bottom:16px"><span style="font:800 32px/1 'Overpass';letter-spacing:-0.02em">{{ title }}</span><span style="font:500 12px/1 'Overpass Mono';letter-spacing:0.12em;color:var(--rp-text-3)">EVERY LIST · EVERY FORM</span></div>
+
+<div style="display:grid;grid-template-columns:160px repeat(4,minmax(0,1fr));gap:20px;align-items:start">
+  <span></span>
+  <span style="font:600 12px/1 'Overpass Mono';letter-spacing:0.14em;color:var(--rp-text-2)">SKELETON</span>
+  <span style="font:600 12px/1 'Overpass Mono';letter-spacing:0.14em;color:var(--rp-text-2)">EMPTY</span>
+  <span style="font:600 12px/1 'Overpass Mono';letter-spacing:0.14em;color:var(--rp-text-2)">ERROR</span>
+  <span style="font:600 12px/1 'Overpass Mono';letter-spacing:0.14em;color:var(--rp-text-2)">POPULATED</span>
+  <sc-for list="{{ lists }}" as="l" hint-placeholder-count="4">
+    <span style="font:800 20px/1.2 'Overpass';padding-top:14px">{{ l.name }}</span>
+    <div style="display:flex;flex-direction:column;gap:8px"><sc-for list="{{ bones }}" as="b" hint-placeholder-count="3"><div style="border:1px solid var(--rp-line);border-radius:14px;background:var(--rp-surface);padding:14px;display:flex;gap:12px;align-items:center"><span style="width:92px;height:28px;flex:none;border-radius:4px;background:var(--rp-sunken);border:1.5px solid var(--rp-line)"></span><div style="flex:1;display:flex;flex-direction:column;gap:8px"><span style="height:12px;width:{{ b.w }};border-radius:3px;background:var(--rp-sunken)"></span><span style="height:10px;width:40%;border-radius:3px;background:var(--rp-sunken)"></span></div></div></sc-for></div>
+    <div style="border:1px dashed var(--rp-line-strong);border-radius:14px;padding:24px 18px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;min-height:200px;box-sizing:border-box;justify-content:center"><span style="font:700 17px/1.2 'Overpass'">{{ l.emptyTitle }}</span><span style="font:400 14px/1.45 'Overpass';color:var(--rp-text-2)">{{ l.emptyBody }}</span><sc-if value="{{ l.emptyAction }}" hint-placeholder-val="{{ true }}"><span style="margin-top:4px;height:44px;padding:0 16px;border-radius:10px;border:1.5px solid var(--rp-text);display:flex;align-items:center;font:700 14px/1 'Overpass'">{{ l.emptyAction }}</span></sc-if></div>
+    <div style="border:1px solid var(--rp-line);border-radius:14px;background:var(--rp-surface);padding:16px;display:flex;flex-direction:column;gap:12px"><span style="display:flex;gap:10px;font:500 15px/1.35 'Overpass'"><span style="color:var(--rp-stop);display:flex"><svg viewBox="0 0 24 24" width="20" height="20" style="flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg></span>{{ l.error }}</span><span style="font:400 13px/1.4 'Overpass';color:var(--rp-text-2)">Check your connection. Nothing you've sent is lost.</span><span style="align-self:flex-start;height:40px;padding:0 14px;border-radius:10px;border:1.5px solid var(--rp-text);display:flex;align-items:center;font:700 14px/1 'Overpass'">Try again</span></div>
+    <div style="border:1px solid var(--rp-line);border-radius:14px;background:var(--rp-surface)"><sc-for list="{{ l.rows }}" as="r" hint-placeholder-count="2"><div style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--rp-line)"><div style="height:28px;padding:0 9px;border:1.5px solid var(--rp-text);border-radius:4px;display:flex;align-items:center;font:600 15px/1 'Overpass Mono';letter-spacing:0.1em;flex:none">{{ r.plate }}</div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px"><span style="font:600 14px/1.25 'Overpass'">{{ r.title }}</span><span style="font:500 12px/1 'Overpass Mono';color:var(--rp-text-3)">{{ r.meta }}</span></div></div></sc-for></div>
+  </sc-for>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:20px;margin-top:24px">
+  <span style="font:600 12px/1 'Overpass Mono';letter-spacing:0.14em;color:var(--rp-text-2)">FORM VALIDATION AND SERVER ERRORS · INLINE UNDER THE FIELD, OR A BANNER WHEN IT'S ABOUT THE WHOLE FORM</span>
+  <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px">
+    <sc-for list="{{ formErrors }}" as="f" hint-placeholder-count="12">
+    <div style="border:1px solid var(--rp-line);border-radius:14px;background:var(--rp-surface);padding:16px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;justify-content:space-between;gap:8px"><span style="font:600 11px/1.3 'Overpass Mono';letter-spacing:0.1em;color:var(--rp-text-3)">{{ f.where }}</span><span style="font:600 11px/1.3 'Overpass Mono';letter-spacing:0.1em;color:var(--rp-text-3)">{{ f.kind }}</span></div>
+      <sc-if value="{{ f.isField }}" hint-placeholder-val="{{ true }}"><div style="height:44px;border:1.5px solid var(--rp-stop);border-radius:10px;display:flex;align-items:center;padding:0 12px;font:500 15px/1 'Overpass Mono';letter-spacing:0.04em">{{ f.value }}</div><span style="display:flex;gap:6px;font:500 13px/1.4 'Overpass';color:var(--rp-stop)"><svg viewBox="0 0 24 24" width="15" height="15" style="flex:none;margin-top:1px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg>{{ f.msg }}</span></sc-if>
+      <sc-if value="{{ f.isBanner }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:10px;padding:12px;border-radius:10px;border:1px solid var(--rp-stop);background:var(--rp-stop-tint);font:500 14px/1.4 'Overpass'"><span style="color:var(--rp-stop);display:flex"><svg viewBox="0 0 24 24" width="17" height="17" style="flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg></span>{{ f.msg }}</div></sc-if>
+      <sc-if value="{{ f.isNotice }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:10px;padding:12px;border-radius:10px;border:1px solid var(--rp-line-strong);background:var(--rp-sunken);font:500 14px/1.4 'Overpass'"><span style="color:var(--rp-text-2);display:flex"><svg viewBox="0 0 24 24" width="17" height="17" style="flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>{{ f.msg }}</div></sc-if>
+    </div>
+    </sc-for>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1880,&quot;height&quot;:2000},&quot;themeName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Light&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const F = (where, kind, type, msg, value) => ({ where, kind, msg, value: value || '', isField: type === 'field', isBanner: type === 'banner', isNotice: type === 'notice' });
+    return {
+      title: 'List and form states · ' + (this.props.themeName ?? 'Light'),
+      bones: [{ w: '70%' }, { w: '55%' }, { w: '62%' }],
+      lists: [
+        { name: 'Alerts', emptyTitle: 'No alerts', emptyBody: 'When someone reports one of your cars, it shows up here and on your lock screen.', emptyAction: 'Add a vehicle', error: "We couldn't load your alerts.",
+          rows: [{ plate: '8KTR 214', title: 'Needs your reply · Blocking driveway', meta: 'Today 21:42 · Push' }, { plate: '5HDW 880', title: 'You replied Moving now', meta: '28 Oct 09:13' }] },
+        { name: 'Reports', emptyTitle: 'No reports yet', emptyBody: "If a car's blocking you, enter its plate and we'll let the owner know.", emptyAction: 'Report a car', error: "We couldn't load your reports.",
+          rows: [{ plate: '7LMV 302', title: 'Owner notified', meta: 'Today 21:40' }, { plate: '3JHN 557', title: 'Owner responded · Moving now', meta: 'Today 08:15' }] },
+        { name: 'Vehicles', emptyTitle: 'No vehicles', emptyBody: 'Add your plate so people can reach you without knowing who you are.', emptyAction: 'Add a vehicle', error: "We couldn't load your vehicles.",
+          rows: [{ plate: '8KTR 214', title: 'Silver Toyota Corolla', meta: 'Added 3 Mar 2026' }, { plate: '5HDW 880', title: 'Blue Ford Transit', meta: 'Added 19 Jun 2026' }] },
+        { name: 'Claims', emptyTitle: 'No claims', emptyBody: 'If someone else has registered your plate, you can file a claim from Add a vehicle.', emptyAction: '', error: "We couldn't load your claims.",
+          rows: [{ plate: '7LMV 302', title: 'Under review', meta: 'Filed 31 Oct' }, { plate: '5HDW 880', title: 'Approved', meta: 'Filed 12 Jun' }] }
+      ],
+      formErrors: [
+        F('SIGN-IN · PHONE', 'VALIDATION', 'field', "That number looks too short. Check it and try again.", '+1 415 555'),
+        F('SIGN-IN · CODE', 'VALIDATION', 'field', "That code didn't match. Check the latest text and try again.", '4 8 2 9 1 7'),
+        F('SIGN-IN · CODE', 'EXPIRED', 'field', 'That code has expired. Ask for a new one.', '4 8 2 9 1 3'),
+        F('SIGN-IN', 'SERVER', 'banner', "We couldn't send a text just now. Try again in a minute."),
+        F('REPORT · PLATE', 'VALIDATION', 'field', 'Use letters and numbers only.', '8KT-R?'),
+        F('REPORT · PLATE', 'LIMIT', 'field', 'This plate was reported in the last 15 minutes. You can report it again at 21:57.', '8KTR 214'),
+        F('REPORT', 'LIMIT', 'banner', "You've sent 3 reports in the last hour. You can send another at 22:10."),
+        F('REPORT', 'BLOCKED', 'notice', 'Reporting is paused for your account after several incorrect reports. You can report again on 14 Nov.'),
+        F('REPORT · LOCATION', 'PERMISSION', 'banner', 'We need your location to send a report. Turn it on in Settings, then come back.'),
+        F('REPORT · NOTE', 'VALIDATION', 'field', "Remove the phone number. Notes can't include contact details.", 'call me on 0412…'),
+        F('VEHICLES · ADD', 'LIMIT', 'banner', "You've added 10 vehicles, the most one account can have. Remove one to add another."),
+        F('ANY FORM', 'SERVER', 'banner', "Something went wrong on our side. Your details are still here. Try again.")
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/classical-8f5f3ff6-06f2-4f36-9e65-16b244a4bd1f/styles.css">
+<script src="_ds/classical-8f5f3ff6-06f2-4f36-9e65-16b244a4bd1f/_ds_bundle.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400..900&amp;family=Overpass+Mono:wght@400..700&amp;display=swap">
+</helmet>
+<div style="width:1880px;box-sizing:border-box;padding:56px;background:var(--rp-board,#E4E1D9);color:var(--rp-text,#0D1117);font-family:'Overpass',sans-serif;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--rp-line-strong);padding-bottom:16px"><span style="font:800 32px/1 'Overpass';letter-spacing:-0.02em">{{ title }}</span><span style="font:500 12px/1 'Overpass Mono';letter-spacing:0.12em;color:var(--rp-text-3)">LEGAL TEXT IS PLACEHOLDER · REPLACE BEFORE LAUNCH</span></div>
+
+<div style="display:flex;gap:48px;align-items:flex-start">
+<sc-for list="{{ legal }}" as="doc" hint-placeholder-count="2">
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="width:860px;border-radius:12px;overflow:hidden;border:1px solid var(--rp-line-strong);background:var(--rp-bg);box-shadow:0 6px 20px rgba(13,17,23,.12)">
+  <div style="height:64px;border-bottom:1px solid var(--rp-line);display:flex;align-items:center;gap:24px;padding:0 40px;font:600 14px/1 'Overpass';color:var(--rp-text-2)"><span style="font:800 18px/1 'Overpass';color:var(--rp-text)">RePark</span><span style="margin-left:auto;color:var(--rp-brand)">Sign in</span></div>
+  <div style="padding:56px 40px 64px;display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px">
+    <div style="display:flex;flex-direction:column;gap:2px;font:500 14px/1.3 'Overpass';color:var(--rp-text-2)"><span style="font:600 11px/1 'Overpass Mono';letter-spacing:0.14em;color:var(--rp-text-3);margin-bottom:12px">ON THIS PAGE</span><sc-for list="{{ doc.sections }}" as="s" hint-placeholder-count="5"><span style="padding:8px 0 8px 12px;border-left:2px solid var(--rp-line)">{{ s }}</span></sc-for></div>
+    <div style="display:flex;flex-direction:column;gap:18px;max-width:560px">
+      <span style="font:600 12px/1 'Overpass Mono';letter-spacing:0.12em;color:var(--rp-text-3)">LAST UPDATED · [DATE]</span>
+      <h1 style="margin:0;font:800 44px/48px 'Overpass';letter-spacing:-0.03em">{{ doc.name }}</h1>
+      <span style="font:400 18px/1.55 'Overpass';color:var(--rp-text-2)">{{ doc.lede }}</span>
+      <sc-for list="{{ doc.sections }}" as="s" hint-placeholder-count="5"><div style="display:flex;flex-direction:column;gap:8px;padding-top:18px;border-top:1px solid var(--rp-line)"><h2 style="margin:0;font:700 22px/28px 'Overpass';letter-spacing:-0.01em">{{ s }}</h2><p style="margin:0;font:400 16px/1.65 'Overpass';color:var(--rp-text-2)">Placeholder text. Replace this paragraph with the final wording for this section. Keep sentences short and plain, and use the same terms the app uses.</p></div></sc-for>
+    </div>
+  </div>
+</div>
+<span style="font:500 12px/1.4 'Overpass Mono';color:var(--rp-text-3)">{{ doc.caption }}</span>
+</div>
+</sc-for>
+</div>
+
+<div style="display:flex;gap:48px;align-items:flex-start">
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="width:860px;border-radius:12px;overflow:hidden;border:1px solid var(--rp-line-strong);background:var(--rp-bg);box-shadow:0 6px 20px rgba(13,17,23,.12)">
+  <div style="height:64px;border-bottom:1px solid var(--rp-line);display:flex;align-items:center;gap:24px;padding:0 40px;font:600 14px/1 'Overpass';color:var(--rp-text-2)"><span style="font:800 18px/1 'Overpass';color:var(--rp-text)">RePark</span><span style="margin-left:auto;color:var(--rp-brand)">Sign in</span></div>
+  <div style="padding:56px 40px 64px;display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:48px">
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <h1 style="margin:0;font:800 44px/48px 'Overpass';letter-spacing:-0.03em">Contact us</h1>
+      <span style="font:400 17px/1.55 'Overpass';color:var(--rp-text-2)">We read every message. Tell us what happened and we'll reply by email.</span>
+      <div style="display:flex;flex-direction:column;gap:8px"><label style="font:600 14px/1 'Overpass'">What's it about?</label><div style="display:grid;grid-template-columns:repeat(3,1fr);padding:3px;background:var(--rp-sunken);border-radius:10px;border:1px solid var(--rp-line)"><span style="height:38px;border-radius:8px;background:var(--rp-surface);box-shadow:0 1px 2px rgba(13,17,23,.12);display:flex;align-items:center;justify-content:center;font:700 14px/1 'Overpass'">A report</span><span style="height:38px;display:flex;align-items:center;justify-content:center;font:600 14px/1 'Overpass';color:var(--rp-text-2)">My account</span><span style="height:38px;display:flex;align-items:center;justify-content:center;font:600 14px/1 'Overpass';color:var(--rp-text-2)">Something else</span></div></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><label style="font:600 14px/1 'Overpass'">Email</label><div style="height:48px;border:1.5px solid var(--rp-line-strong);border-radius:10px;background:var(--rp-surface);display:flex;align-items:center;padding:0 14px;font:400 16px/1 'Overpass';color:var(--rp-text-3)">you@example.com</div></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><label style="font:600 14px/1 'Overpass'">Message</label><div style="height:128px;border:1.5px solid var(--rp-line-strong);border-radius:10px;background:var(--rp-surface);padding:12px 14px;box-sizing:border-box;font:400 16px/1.45 'Overpass';color:var(--rp-text-3)">If it's about a report, include the plate and roughly when.</div></div>
+      <span style="align-self:flex-start;height:52px;padding:0 28px;border-radius:10px;background:var(--rp-brand);color:var(--rp-on-brand);display:flex;align-items:center;font:700 16px/1 'Overpass'">Send message</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;padding-top:8px;font:400 14px/1.55 'Overpass';color:var(--rp-text-2)">
+      <div style="display:flex;gap:10px;padding:14px;border-radius:10px;background:var(--rp-signal-tint);color:var(--rp-text)"><svg viewBox="0 0 24 24" width="18" height="18" style="flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg><span style="font:500 14px/1.45 'Overpass'">In an emergency, call your local emergency number. RePark isn't monitored around the clock.</span></div>
+      <span style="padding-top:16px;border-top:1px solid var(--rp-line)">We'll never pass your details to the other person in a report.</span>
+    </div>
+  </div>
+</div>
+<span style="font:500 12px/1.4 'Overpass Mono';color:var(--rp-text-3)">Web · /contact</span>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="width:860px;height:640px;border-radius:12px;overflow:hidden;border:1px solid var(--rp-line-strong);background:var(--rp-bg);box-shadow:0 6px 20px rgba(13,17,23,.12);display:flex;flex-direction:column;position:relative">
+  <div style="height:64px;flex:none;border-bottom:1px solid var(--rp-line);display:flex;align-items:center;padding:0 40px"><span style="font:800 18px/1 'Overpass'">RePark</span></div>
+  <div style="flex:1;padding:0 72px;display:flex;flex-direction:column;justify-content:center;gap:22px">
+    <div style="align-self:flex-start;width:300px;height:80px;background:var(--rp-surface);border:2px dashed var(--rp-line-strong);border-radius:6px;display:flex;align-items:center;justify-content:center;font:600 40px/1 'Overpass Mono';letter-spacing:0.14em;color:var(--rp-text-3)">404</div>
+    <h1 style="margin:0;font:800 52px/56px 'Overpass';letter-spacing:-0.03em">Nothing parked here.</h1>
+    <span style="font:400 18px/1.55 'Overpass';color:var(--rp-text-2);max-width:520px">The link may be old, or the address has a typo. If you scanned a sticker, try entering the plate yourself.</span>
+    <div style="display:flex;gap:10px"><span style="height:52px;padding:0 24px;border-radius:10px;background:var(--rp-brand);color:var(--rp-on-brand);display:flex;align-items:center;font:700 16px/1 'Overpass'">Report a car</span><span style="height:52px;padding:0 24px;border-radius:10px;border:1.5px solid var(--rp-text);display:flex;align-items:center;font:700 16px/1 'Overpass'">Go to the home page</span></div>
+  </div>
+  <div style="height:8px;flex:none;background:repeating-linear-gradient(-45deg,#F5B800 0 12px,#0D1117 12px 24px)"></div>
+</div>
+<span style="font:500 12px/1.4 'Overpass Mono';color:var(--rp-text-3)">Web · 404 · the blank plate, the kerb stripe used once</span>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="width:1200px;height:630px;border-radius:4px;overflow:hidden;background:var(--rp-field,#0B46C9);color:#fff;position:relative;display:grid;grid-template-columns:minmax(0,1fr) 420px;align-items:center;padding:0 72px;box-sizing:border-box;gap:40px">
+  <div style="display:flex;flex-direction:column;gap:28px">
+    <div style="display:flex;align-items:center;gap:12px"><svg viewBox="0 0 64 64" width="44" height="44"><rect x="6" y="15" width="52" height="36" rx="6" style="fill:none;stroke:#fff;stroke-width:4.5"></rect><text x="32" y="45" text-anchor="middle" style="font:800 27px 'Overpass';fill:#fff">P</text><circle cx="55" cy="16" r="7" style="fill:#F5B800;stroke:#0B46C9;stroke-width:3"></circle></svg><span style="font:800 34px/1 'Overpass';letter-spacing:-0.03em">RePark</span></div>
+    <span style="font:800 64px/66px 'Overpass';letter-spacing:-0.035em">Blocked in? <span style="opacity:.7">Tell the owner in under a minute.</span></span>
+    <span style="font:500 18px/1 'Overpass Mono';opacity:.85">repark.app</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div style="height:110px;background:#fff;color:#0D1117;border:3px solid #0D1117;border-radius:8px;display:flex;box-shadow:inset 0 0 0 4px #fff,inset 0 0 0 5px #CFCBBF"><div style="width:26px;background:#0B46C9;border-radius:4px 0 0 4px"></div><div style="flex:1;display:flex;align-items:center;justify-content:center;font:600 52px/1 'Overpass Mono';letter-spacing:0.12em">8KTR 214</div></div>
+    <div style="padding:14px 16px;border-radius:14px;background:#fff;color:#0D1117;display:flex;gap:12px;align-items:center"><span style="width:32px;height:32px;border-radius:50%;background:#E3F2EB;color:#0A7A50;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" style="flex:none;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="font:700 18px/1.2 'Overpass'">Owner replied: Moving now</span><span style="margin-left:auto;font:500 13px/1 'Overpass Mono';color:#626976">21:44</span></div>
+  </div>
+  <div style="position:absolute;left:0;right:0;bottom:0;height:12px;background:repeating-linear-gradient(-45deg,#F5B800 0 16px,#0D1117 16px 32px)"></div>
+</div>
+<span style="font:500 12px/1.4 'Overpass Mono';color:var(--rp-text-3)">Social share image · 1200 × 630 · export one per theme, use light for og:image</span>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1880,&quot;height&quot;:2600},&quot;themeName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Light&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      title: 'Public pages · ' + (this.props.themeName ?? 'Light'),
+      legal: [
+        { name: 'Privacy', lede: 'RePark passes a message between two people without telling either who the other is. This page explains what we keep and why.', sections: ['What we collect', 'What each person sees', 'How long we keep it', 'Your choices', 'Contact'], caption: 'Web · /privacy · layout only, placeholder text' },
+        { name: 'Terms', lede: 'The rules for using RePark, written to be read.', sections: ['Using RePark', 'Reports and limits', 'Incorrect reports', 'Your account', 'Changes to these terms'], caption: 'Web · /terms · layout only, placeholder text' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
