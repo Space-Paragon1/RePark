@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: 'Sign in' };
 
 export default function LoginPage() {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center bg-brand px-5 py-12">
+    <main className="flex flex-1 flex-col items-center justify-center bg-field px-5 py-12">
       <Link href="/" className="mb-8">
         <Logo light />
       </Link>

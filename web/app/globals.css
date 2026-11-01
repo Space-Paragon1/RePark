@@ -1,30 +1,99 @@
 @import "tailwindcss";
 
-/* Brand colours match mobile/lib/theme.ts */
-@theme inline {
-  --color-brand: #2563eb;
-  --color-brand-dark: #1d4ed8;
-  --color-brand-light: #eff6ff;
-  --color-brand-border: #bfdbfe;
+/* RePark "Curbside" tokens. Same values as mobile/lib/theme.ts.
+   Source: design_handoff_repark_redesign/tokens.md */
 
-  --color-success: #059669;
-  --color-success-light: #ecfdf5;
-  --color-warning: #b45309;
-  --color-warning-light: #fffbeb;
-  --color-danger: #dc2626;
-  --color-danger-light: #fef2f2;
+@theme {
+  --font-sans: var(--font-overpass), system-ui, sans-serif;
+  --font-mono: var(--font-overpass-mono), ui-monospace, monospace;
 
-  --color-page: #f8fafc;
-  --color-line: #e2e8f0;
-  --color-ink: #0f172a;
-  --color-ink-secondary: #475569;
-  /* Darker than the app's #94a3b8 so small grey text meets the 4.5:1 contrast minimum */
-  --color-ink-muted: #64748b;
+  --color-bg: #F7F6F2;
+  --color-surface: #FFFFFF;
+  --color-surface-sunken: #EFEDE7;
+  --color-line: #E2DFD6;
+  --color-line-strong: #CFCBBF;
+  --color-text: #0D1117;
+  --color-text-secondary: #4A5160;
+  --color-text-muted: #626976;
+  --color-brand: #0B46C9;
+  --color-brand-pressed: #0938A3;
+  --color-brand-tint: #E7EDFB;
+  --color-on-brand: #FFFFFF;
+  --color-signal: #F5B800;
+  --color-on-signal: #0D1117;
+  --color-signal-tint: #FDF1CC;
+  --color-go: #0A7A50;
+  --color-go-tint: #E3F2EB;
+  --color-stop: #C2362F;
+  --color-stop-pressed: #A32C26;
+  --color-stop-tint: #FBE9E7;
+  --color-on-stop: #FFFFFF;
+  --color-inverse: #0D1117;
+  --color-on-inverse: #ECEEF2;
+  --color-field: #0B46C9;
 
-  --font-sans: var(--font-geist-sans);
+  --radius-plate-sm: 4px;
+  --radius-plate: 6px;
+  --radius-control: 10px;
+  --radius-card: 14px;
+  --radius-sheet: 22px;
+
+  --shadow-e1: 0 6px 20px rgba(13, 17, 23, 0.12);
+  --shadow-e2: 0 -8px 32px rgba(13, 17, 23, 0.16);
+
+  --ease-ui: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0D1117;
+    --color-surface: #161B22;
+    --color-surface-sunken: #0A0D12;
+    --color-line: #262D37;
+    --color-line-strong: #3A4250;
+    --color-text: #ECEEF2;
+    --color-text-secondary: #A3A9B5;
+    --color-text-muted: #8B929E;
+    --color-brand: #7C9BFF;
+    --color-brand-pressed: #A3B9FF;
+    --color-brand-tint: #1A2440;
+    --color-on-brand: #0D1117;
+    --color-signal-tint: #3A2F0A;
+    --color-go: #4CC38A;
+    --color-go-tint: #12261D;
+    --color-stop: #FF7B72;
+    --color-stop-pressed: #FFA39C;
+    --color-stop-tint: #2C1715;
+    --color-on-stop: #0D1117;
+    --color-inverse: #ECEEF2;
+    --color-on-inverse: #0D1117;
+    --color-field: #1A2440;
+    --shadow-e1: none;
+    --shadow-e2: none;
+  }
+}
+
+:root {
+  color-scheme: light dark;
 }
 
 body {
-  background: var(--color-page);
-  color: var(--color-ink);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 3px;
+}
+
+.tnum { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 120ms !important;
+    transition-duration: 120ms !important;
+    transition-property: opacity, color, background-color, border-color !important;
+  }
 }

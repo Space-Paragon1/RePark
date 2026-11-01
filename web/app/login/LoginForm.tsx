@@ -117,11 +117,11 @@ export function LoginForm() {
     return (
       <form onSubmit={sendCode} className="space-y-5">
         {reason && (
-          <p className="rounded-lg bg-brand-light px-4 py-3 text-sm text-brand">{reason}</p>
+          <p className="rounded-lg bg-brand-tint px-4 py-3 text-sm text-brand">{reason}</p>
         )}
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Sign in</h1>
-          <p className="mt-1 text-ink-secondary">We’ll text you a one-time code. No password needed.</p>
+          <p className="mt-1 text-text-secondary">We’ll text you a one-time code. No password needed.</p>
         </div>
         <ErrorBanner message={error} />
         <Field label="Phone number" hint="Include your country code, e.g. +44 or +1">
@@ -146,11 +146,11 @@ export function LoginForm() {
     <form onSubmit={verifyCode} className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Enter your code</h1>
-        <p className="mt-1 text-ink-secondary">We sent a 6-digit code to {phone}.</p>
+        <p className="mt-1 text-text-secondary">We sent a 6-digit code to {phone}.</p>
       </div>
       <ErrorBanner message={error} />
       {notice && (
-        <p role="status" className="rounded-lg border border-emerald-200 bg-success-light px-4 py-3 text-sm text-success">
+        <p role="status" className="rounded-lg border border-go/30 bg-go-tint px-4 py-3 text-sm text-go">
           {notice}
         </p>
       )}
@@ -174,13 +174,13 @@ export function LoginForm() {
       <div className="flex flex-col items-center gap-3 text-sm font-medium">
         <button
           type="button"
-          className="text-brand hover:underline disabled:cursor-not-allowed disabled:text-ink-muted disabled:no-underline"
+          className="text-brand hover:underline disabled:cursor-not-allowed disabled:text-text-muted disabled:no-underline"
           onClick={resendCode}
           disabled={busy !== null || resendIn > 0}
         >
           {resendIn > 0 ? `Didn’t get it? Send a new code in ${resendIn}s` : 'Didn’t get it? Send a new code'}
         </button>
-        <button type="button" className="text-ink-secondary hover:underline" onClick={changeNumber}>
+        <button type="button" className="text-text-secondary hover:underline" onClick={changeNumber}>
           Use a different number
         </button>
       </div>

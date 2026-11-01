@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Animated } from 'react-native';
+import { View, Text, ScrollView, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { vehiclesApi, alertsApi, reportsApi } from '@/lib/api';
-import { colors, shadow, radius } from '@/lib/theme';
+import { font, radius, themedStyles } from '@/lib/theme';
 import { PressableScale } from '@/components/PressableScale';
 import { FadeInView } from '@/components/FadeInView';
 import { SkeletonBox } from '@/components/Skeleton';
@@ -35,6 +35,7 @@ function useCountUp(target: number | undefined, duration = 700) {
 function StatCard({ label, value, icon, highlight }: {
   label: string; value?: number; icon: string; highlight?: boolean;
 }) {
+  const s = useStyles();
   const displayed = useCountUp(value);
   return (
     <View style={[s.statCard, highlight && s.statCardHL]}>
@@ -53,6 +54,7 @@ function ActionCard({ icon, title, description, onPress, primary, badge, delay }
   icon: string; title: string; description: string;
   onPress: () => void; primary?: boolean; badge?: number; delay?: number;
 }) {
+  const s = useStyles();
   return (
     <FadeInView delay={delay} style={{ marginHorizontal: 16, marginBottom: 10 }}>
       <PressableScale onPress={onPress} style={[s.actionCard, primary && s.actionCardPrimary]}>
@@ -77,6 +79,7 @@ function ActionCard({ icon, title, description, onPress, primary, badge, delay }
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
+  const s = useStyles();
   const router = useRouter();
   const { session } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
@@ -137,18 +140,18 @@ export default function HomeScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg },
+const useStyles = themedStyles((c, sh) => ({
+  root: { flex: 1, backgroundColor: c.bg },
   content: { paddingBottom: 40 },
 
   header: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.field,
     paddingHorizontal: 24,
     paddingTop: 68,
     paddingBottom: 32,
   },
   greeting: { fontSize: 14, color: 'rgba(255,255,255,0.75)', marginBottom: 2 },
-  appName:  { fontSize: 30, fontWeight: '800', color: '#fff', letterSpacing: -0.5 },
+  appName:  { fontSize: 30, fontFamily: font.heading, color: '#fff', letterSpacing: -0.5 },
 
   statsRow: {
     flexDirection: 'row',
@@ -158,46 +161,46 @@ const s = StyleSheet.create({
     marginBottom: 28,
   },
   statCard: {
-    flex: 1, backgroundColor: colors.card, borderRadius: radius.md,
-    padding: 14, alignItems: 'center', ...shadow.md,
+    flex: 1, backgroundColor: c.surface, borderRadius: radius.card,
+    padding: 14, alignItems: 'center', ...sh.e1,
   },
-  statCardHL:    { backgroundColor: colors.primary },
+  statCardHL:    { backgroundColor: c.brand },
   statIcon:      { fontSize: 20, marginBottom: 4 },
-  statValue:     { fontSize: 22, fontWeight: '800', color: colors.text },
-  statValueHL:   { color: '#fff' },
-  statLabel:     { fontSize: 11, color: colors.textMuted, marginTop: 2, textAlign: 'center', fontWeight: '600' },
-  statLabelHL:   { color: 'rgba(255,255,255,0.8)' },
+  statValue:     { fontSize: 22, fontFamily: font.mono, color: c.text },
+  statValueHL:   { color: c.onBrand },
+  statLabel:     { fontSize: 11, color: c.textMuted, marginTop: 2, textAlign: 'center', fontWeight: '600' },
+  statLabelHL:   { color: c.onBrand, opacity: 0.8 },
 
   sectionTitle: {
-    fontSize: 13, fontWeight: '700', color: colors.textMuted,
+    fontSize: 13, fontFamily: font.mono, color: c.textMuted,
     letterSpacing: 0.5, textTransform: 'uppercase',
     marginHorizontal: 20, marginBottom: 12,
   },
 
   actionCard: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.card, borderRadius: radius.md,
-    padding: 16, ...shadow.sm,
+    backgroundColor: c.surface, borderRadius: radius.card,
+    padding: 16, borderWidth: 1, borderColor: c.line,
   },
-  actionCardPrimary: { backgroundColor: colors.primary },
+  actionCardPrimary: { backgroundColor: c.brand, borderColor: c.brand },
   actionIconBox: {
-    width: 44, height: 44, borderRadius: radius.sm,
-    backgroundColor: colors.bg, justifyContent: 'center',
+    width: 44, height: 44, borderRadius: radius.control,
+    backgroundColor: c.bg, justifyContent: 'center',
     alignItems: 'center', marginRight: 14,
   },
   actionIconBoxPrimary: { backgroundColor: 'rgba(255,255,255,0.2)' },
   actionIcon:         { fontSize: 22 },
   actionText:         { flex: 1 },
-  actionTitle:        { fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 2 },
-  actionTitlePrimary: { color: '#fff' },
-  actionDesc:         { fontSize: 13, color: colors.textSecondary },
-  actionDescPrimary:  { color: 'rgba(255,255,255,0.75)' },
-  chevron:            { fontSize: 22, color: colors.textMuted, marginLeft: 8 },
-  chevronPrimary:     { color: 'rgba(255,255,255,0.6)' },
+  actionTitle:        { fontSize: 15, fontWeight: '700', color: c.text, marginBottom: 2 },
+  actionTitlePrimary: { color: c.onBrand },
+  actionDesc:         { fontSize: 13, color: c.textSecondary },
+  actionDescPrimary:  { color: c.onBrand, opacity: 0.8 },
+  chevron:            { fontSize: 22, color: c.textMuted, marginLeft: 8 },
+  chevronPrimary:     { color: c.onBrand, opacity: 0.6 },
   badge: {
-    backgroundColor: '#fff', borderRadius: radius.full,
+    backgroundColor: c.surface, borderRadius: radius.pill,
     minWidth: 22, height: 22, justifyContent: 'center',
     alignItems: 'center', paddingHorizontal: 6, marginRight: 6,
   },
-  badgeText: { color: colors.primary, fontSize: 11, fontWeight: '800' },
-});
+  badgeText: { color: c.brand, fontSize: 11, fontWeight: '800' },
+}));

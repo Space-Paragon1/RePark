@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity, StyleSheet,
+  View, Text, FlatList, TouchableOpacity,
   ActivityIndicator, Alert, Modal, TextInput,
   KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { ApiError, Vehicle, VehicleCreate, vehiclesApi } from '@/lib/api';
-import { colors, shadow, radius } from '@/lib/theme';
+import { font, radius, themedStyles, useTheme } from '@/lib/theme';
 import { PressableScale } from '@/components/PressableScale';
 import { FadeInView } from '@/components/FadeInView';
 import { SkeletonCard } from '@/components/Skeleton';
@@ -15,6 +15,8 @@ import { SkeletonCard } from '@/components/Skeleton';
 function AddVehicleModal({ visible, onClose, onAdded }: {
   visible: boolean; onClose: () => void; onAdded: (v: Vehicle) => void;
 }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [form, setForm] = useState<VehicleCreate>({
     plate_number: '', make: '', model: '', color: '', parking_zone: null,
   });
@@ -76,7 +78,7 @@ function AddVehicleModal({ visible, onClose, onAdded }: {
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView style={styles.modalRoot} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={styles.modalContent}>
           {/* Modal header */}
           <View style={styles.modalHeader}>
@@ -111,7 +113,7 @@ function AddVehicleModal({ visible, onClose, onAdded }: {
             disabled={saving}
           >
             {saving
-              ? <ActivityIndicator color="#fff" />
+              ? <ActivityIndicator color={colors.onBrand} />
               : <Text style={styles.saveButtonText}>Save Vehicle</Text>}
           </TouchableOpacity>
         </ScrollView>
@@ -123,6 +125,7 @@ function AddVehicleModal({ visible, onClose, onAdded }: {
 // ─── Vehicle Card ─────────────────────────────────────────────────────────────
 
 function VehicleCard({ vehicle, onDelete }: { vehicle: Vehicle; onDelete: () => void }) {
+  const styles = useStyles();
   const initials = `${vehicle.make[0] ?? ''}${vehicle.model[0] ?? ''}`.toUpperCase();
 
   const confirmDelete = () =>
@@ -154,6 +157,7 @@ function VehicleCard({ vehicle, onDelete }: { vehicle: Vehicle; onDelete: () => 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function VehiclesScreen() {
+  const styles = useStyles();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -218,8 +222,8 @@ export default function VehiclesScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
+const useStyles = themedStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.bg },
 
   header: {
     flexDirection: 'row',
@@ -228,72 +232,74 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 64,
     paddingBottom: 18,
-    backgroundColor: colors.card,
+    backgroundColor: c.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.line,
   },
-  headerLabel: { fontSize: 12, color: colors.textMuted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
-  headerTitle: { fontSize: 24, fontWeight: '800', color: colors.text, marginTop: 2 },
-  addBtn: { backgroundColor: colors.primary, paddingHorizontal: 18, paddingVertical: 9, borderRadius: radius.full, ...shadow.sm },
-  addBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  headerLabel: { fontSize: 12, color: c.textMuted, fontFamily: font.mono, textTransform: 'uppercase', letterSpacing: 0.5 },
+  headerTitle: { fontSize: 24, fontFamily: font.heading, color: c.text, marginTop: 2 },
+  addBtn: { backgroundColor: c.brand, paddingHorizontal: 18, paddingVertical: 9, borderRadius: radius.pill },
+  addBtnText: { color: c.onBrand, fontWeight: '700', fontSize: 14 },
 
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
+    backgroundColor: c.surface,
+    borderRadius: radius.card,
     marginBottom: 10,
     overflow: 'hidden',
-    ...shadow.sm,
+    borderWidth: 1,
+    borderColor: c.line,
   },
-  cardAccent: { width: 4, alignSelf: 'stretch', backgroundColor: colors.primary },
+  cardAccent: { width: 4, alignSelf: 'stretch', backgroundColor: c.brand },
   cardAvatar: {
     width: 44,
     height: 44,
-    borderRadius: radius.sm,
-    backgroundColor: colors.primaryLight,
+    borderRadius: radius.control,
+    backgroundColor: c.brandTint,
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 14,
   },
-  cardAvatarText: { fontSize: 14, fontWeight: '800', color: colors.primary },
+  cardAvatarText: { fontSize: 14, fontWeight: '800', color: c.brand },
   cardBody: { flex: 1, paddingVertical: 14 },
-  plate: { fontSize: 18, fontWeight: '800', color: colors.text, letterSpacing: 1 },
-  vehicleDesc: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+  plate: { fontSize: 18, fontFamily: font.mono, color: c.text, letterSpacing: 1 },
+  vehicleDesc: { fontSize: 13, color: c.textSecondary, marginTop: 2 },
   zonePill: {
     marginTop: 6,
     alignSelf: 'flex-start',
-    backgroundColor: colors.primaryLight,
-    borderRadius: radius.full,
+    backgroundColor: c.brandTint,
+    borderRadius: radius.pill,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
-  zoneText: { fontSize: 11, color: colors.primary, fontWeight: '600' },
+  zoneText: { fontSize: 11, color: c.brand, fontWeight: '600' },
   deleteBtn: { padding: 16 },
-  deleteText: { color: colors.textMuted, fontSize: 16, fontWeight: '600' },
+  deleteText: { color: c.textMuted, fontSize: 16, fontWeight: '600' },
 
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, paddingTop: 60 },
   emptyIcon: { fontSize: 56, marginBottom: 16 },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: 8 },
-  emptySub: { fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 21, marginBottom: 24 },
-  emptyBtn: { backgroundColor: colors.primary, borderRadius: radius.md, paddingHorizontal: 24, paddingVertical: 12, ...shadow.sm },
-  emptyBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  emptyTitle: { fontSize: 20, fontFamily: font.headingBold, color: c.text, marginBottom: 8 },
+  emptySub: { fontSize: 14, color: c.textSecondary, textAlign: 'center', lineHeight: 21, marginBottom: 24 },
+  emptyBtn: { backgroundColor: c.brand, borderRadius: radius.control, paddingHorizontal: 24, paddingVertical: 12 },
+  emptyBtnText: { color: c.onBrand, fontWeight: '700', fontSize: 15 },
 
   // Modal
+  modalRoot: { flex: 1, backgroundColor: c.surface },
   modalContent: { padding: 24, paddingBottom: 48 },
   modalHeader: { marginBottom: 24 },
-  modalDrag: { width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center', marginBottom: 20 },
+  modalDrag: { width: 36, height: 4, borderRadius: 2, backgroundColor: c.line, alignSelf: 'center', marginBottom: 20 },
   modalTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  modalTitle: { fontSize: 20, fontWeight: '800', color: colors.text },
-  modalClose: { fontSize: 16, color: colors.primary, fontWeight: '600' },
+  modalTitle: { fontSize: 20, fontFamily: font.heading, color: c.text },
+  modalClose: { fontSize: 16, color: c.brand, fontWeight: '600' },
   fieldGroup: { marginBottom: 18 },
-  fieldLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: 6 },
-  required: { color: colors.danger },
+  fieldLabel: { fontSize: 13, fontWeight: '600', color: c.textSecondary, marginBottom: 6 },
+  required: { color: c.stop },
   fieldInput: {
-    borderWidth: 1.5, borderColor: colors.border, borderRadius: radius.md,
-    paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: colors.text, backgroundColor: colors.bg,
+    borderWidth: 1.5, borderColor: c.lineStrong, borderRadius: radius.control,
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: c.text, backgroundColor: c.bg,
   },
-  saveButton: { backgroundColor: colors.primary, borderRadius: radius.md, paddingVertical: 15, alignItems: 'center', marginTop: 8, ...shadow.sm },
+  saveButton: { backgroundColor: c.brand, borderRadius: radius.control, paddingVertical: 15, alignItems: 'center', marginTop: 8 },
   buttonDisabled: { opacity: 0.6 },
-  saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-});
+  saveButtonText: { color: c.onBrand, fontSize: 16, fontWeight: '700' },
+}));

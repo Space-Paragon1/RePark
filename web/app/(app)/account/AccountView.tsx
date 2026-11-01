@@ -62,7 +62,7 @@ export function AccountView() {
       <div className="space-y-5">
         <Card className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-sm text-ink-secondary">Signed in as</p>
+            <p className="text-sm text-text-secondary">Signed in as</p>
             <p className="font-semibold">{phone}</p>
           </div>
           <Button variant="secondary" onClick={handleSignOut} loading={busy === 'signout'}>
@@ -72,7 +72,7 @@ export function AccountView() {
 
         <Card>
           <h2 className="font-semibold">Your data</h2>
-          <p className="mt-1 text-sm text-ink-secondary">
+          <p className="mt-1 text-sm text-text-secondary">
             Download everything RePark stores about you: vehicles, reports, alerts and claims.
           </p>
           <Button variant="secondary" className="mt-4" onClick={downloadData} loading={busy === 'export'}>
@@ -80,9 +80,9 @@ export function AccountView() {
           </Button>
         </Card>
 
-        <Card className="border-red-200">
-          <h2 className="font-semibold text-danger">Delete account</h2>
-          <p className="mt-1 text-sm text-ink-secondary">
+        <Card className="border-stop/30">
+          <h2 className="font-semibold text-stop">Delete account</h2>
+          <p className="mt-1 text-sm text-text-secondary">
             Permanently deletes your account, vehicles, reports and alerts. This can’t be undone, and it
             also signs you out of the RePark app.
           </p>

@@ -1,48 +1,82 @@
-export const colors = {
-  primary:       '#2563EB',
-  primaryDark:   '#1D4ED8',
-  primaryLight:  '#EFF6FF',
-  primaryBorder: '#BFDBFE',
+import { StyleSheet, useColorScheme } from 'react-native';
 
-  success:      '#059669',
-  successLight: '#ECFDF5',
-  successBorder:'#6EE7B7',
+// RePark "Curbside" tokens. Same values as web/app/globals.css.
+// Source: design_handoff_repark_redesign/tokens.md
 
-  warning:      '#D97706',
-  warningLight: '#FFFBEB',
+export const light = {
+  bg: '#F7F6F2', surface: '#FFFFFF', surfaceSunken: '#EFEDE7',
+  line: '#E2DFD6', lineStrong: '#CFCBBF',
+  text: '#0D1117', textSecondary: '#4A5160', textMuted: '#626976',
+  brand: '#0B46C9', brandPressed: '#0938A3', brandTint: '#E7EDFB', onBrand: '#FFFFFF',
+  signal: '#F5B800', onSignal: '#0D1117', signalTint: '#FDF1CC',
+  go: '#0A7A50', goTint: '#E3F2EB',
+  stop: '#C2362F', stopPressed: '#A32C26', stopTint: '#FBE9E7', onStop: '#FFFFFF',
+  inverse: '#0D1117', onInverse: '#ECEEF2', goOnInverse: '#4CC38A',
+  field: '#0B46C9',
+} as const;
 
-  danger:       '#DC2626',
-  dangerLight:  '#FEF2F2',
-
-  bg:     '#F8FAFC',
-  card:   '#FFFFFF',
-  border: '#E2E8F0',
-
-  text:          '#0F172A',
-  textSecondary: '#475569',
-  textMuted:     '#94A3B8',
+export const dark: Record<keyof typeof light, string> = {
+  bg: '#0D1117', surface: '#161B22', surfaceSunken: '#0A0D12',
+  line: '#262D37', lineStrong: '#3A4250',
+  text: '#ECEEF2', textSecondary: '#A3A9B5', textMuted: '#8B929E',
+  brand: '#7C9BFF', brandPressed: '#A3B9FF', brandTint: '#1A2440', onBrand: '#0D1117',
+  signal: '#F5B800', onSignal: '#0D1117', signalTint: '#3A2F0A',
+  go: '#4CC38A', goTint: '#12261D',
+  stop: '#FF7B72', stopPressed: '#FFA39C', stopTint: '#2C1715', onStop: '#0D1117',
+  inverse: '#ECEEF2', onInverse: '#0D1117', goOnInverse: '#0A7A50',
+  field: '#1A2440',
 };
+
+export type Colors = typeof dark;
+
+export function useTheme() {
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
+  return { colors: (isDark ? dark : light) as Colors, isDark, shadow: isDark ? shadowNone : shadow };
+}
+
+export const radius = { plateSm: 4, plate: 6, control: 10, card: 14, sheet: 22, pill: 999 } as const;
+export const space = { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 12: 48, 16: 64 } as const;
 
 export const shadow = {
-  sm: {
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  md: {
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-  },
+  e1: { shadowColor: '#0D1117', shadowOpacity: 0.12, shadowRadius: 20, shadowOffset: { width: 0, height: 6 }, elevation: 4 },
+  e2: { shadowColor: '#0D1117', shadowOpacity: 0.16, shadowRadius: 32, shadowOffset: { width: 0, height: -8 }, elevation: 8 },
+};
+const shadowNone = { e1: {}, e2: {} };
+
+export const font = {
+  heading: 'Overpass_800ExtraBold',
+  headingBold: 'Overpass_700Bold',
+  mono: 'OverpassMono_600SemiBold',
+  monoMedium: 'OverpassMono_500Medium',
 };
 
-export const radius = {
-  sm:   8,
-  md:   12,
-  lg:   16,
-  full: 999,
+export const motion = {
+  press: { damping: 38, stiffness: 600 },
+  timeline: { damping: 30, stiffness: 380 },
+  screen: { damping: 32, stiffness: 300 },
+  stampMs: 180, uiMs: 220, relayMs: 1200, reducedMs: 120,
 };
+
+export type Theme = ReturnType<typeof useTheme>;
+
+/**
+ * Defines a screen's styles from the current theme's colours and shadows.
+ * Each theme's StyleSheet is built once, the first time it's used.
+ *
+ *   const useStyles = themedStyles((c, sh) => ({ card: { backgroundColor: c.surface, ...sh.e1 } }));
+ *   function Card() { const styles = useStyles(); ... }
+ */
+export function themedStyles<S extends StyleMap>(
+  factory: (c: Colors, sh: Theme['shadow']) => S & StyleMap,
+) {
+  const sheets: { light?: Readonly<S>; dark?: Readonly<S> } = {};
+  return function useStyles(): Readonly<S> {
+    const { colors, isDark, shadow: sh } = useTheme();
+    const key = isDark ? 'dark' : 'light';
+    return (sheets[key] ??= StyleSheet.create<S>(factory(colors, sh)));
+  };
+}
+
+/** What StyleSheet.create accepts (React Native 0.88 no longer exports a name for it). */
+type StyleMap = Parameters<typeof StyleSheet.create>[0];

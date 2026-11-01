@@ -70,16 +70,16 @@ export function VehiclesView() {
           <li key={vehicle.id}>
             <Card className="flex h-full items-start justify-between gap-4">
               <div>
-                <p className="inline-block rounded-md border-2 border-ink px-2 py-0.5 font-mono text-lg font-bold tracking-wider">
+                <p className="inline-block rounded-md border-2 border-text px-2 py-0.5 font-mono text-lg font-bold tracking-wider">
                   {vehicle.plate_number}
                 </p>
                 <p className="mt-3 font-medium">
                   {vehicle.color} {vehicle.make} {vehicle.model}
                 </p>
                 {vehicle.parking_zone && (
-                  <p className="text-sm text-ink-secondary">Usually parked: {vehicle.parking_zone}</p>
+                  <p className="text-sm text-text-secondary">Usually parked: {vehicle.parking_zone}</p>
                 )}
-                <p className="mt-1 text-xs text-ink-muted">Added {formatDateTime(vehicle.created_at)}</p>
+                <p className="mt-1 text-xs text-text-muted">Added {formatDateTime(vehicle.created_at)}</p>
               </div>
               <Button
                 variant="danger"
@@ -97,7 +97,7 @@ export function VehiclesView() {
       {!!claims.data?.length && (
         <section className="mt-10">
           <h2 className="mb-1 text-lg font-semibold">Ownership claims</h2>
-          <p className="mb-3 text-sm text-ink-secondary">
+          <p className="mb-3 text-sm text-text-secondary">
             Plates you’ve claimed from another account. We review each claim by hand.
           </p>
           <ul className="space-y-3">
@@ -106,7 +106,7 @@ export function VehiclesView() {
                 <Card className="flex items-center justify-between gap-4 p-4">
                   <div>
                     <p className="font-semibold">{claim.plate_number}</p>
-                    <p className="text-sm text-ink-secondary">Filed {formatDateTime(claim.created_at)}</p>
+                    <p className="text-sm text-text-secondary">Filed {formatDateTime(claim.created_at)}</p>
                   </div>
                   <Badge tone={CLAIM_TONE[claim.status]}>
                     {claim.status === 'pending' ? 'Under review' : claim.status === 'approved' ? 'Approved' : 'Not approved'}
@@ -211,9 +211,9 @@ function AddVehicleForm({ onCancel, onAdded, onClaimed }: {
         </div>
 
         {plateTaken ? (
-          <div className="space-y-3 rounded-lg border border-amber-200 bg-warning-light p-4">
-            <p className="font-semibold text-warning">This plate is registered to another account</p>
-            <p className="text-sm text-ink-secondary">
+          <div className="space-y-3 rounded-lg border border-signal/50 bg-signal-tint p-4">
+            <p className="font-semibold text-text">This plate is registered to another account</p>
+            <p className="text-sm text-text-secondary">
               If it’s your vehicle, file an ownership claim. We’ll review it, and if it’s approved the
               plate moves to your account. The other account holder won’t see your details.
             </p>

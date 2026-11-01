@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist } from 'next/font/google';
+import { Overpass, Overpass_Mono } from 'next/font/google';
 import { AuthProvider } from '@/components/AuthProvider';
 import './globals.css';
 
-const geist = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
+// Variable fonts: one file each covers every weight the design uses.
+const overpass = Overpass({ variable: '--font-overpass', subsets: ['latin'] });
+const overpassMono = Overpass_Mono({ variable: '--font-overpass-mono', subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: {
@@ -16,13 +18,17 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#2563eb',
+  // Browser bar colour: the brand field colour (--color-field) in each theme.
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#0B46C9' },
+    { media: '(prefers-color-scheme: dark)', color: '#1A2440' },
+  ],
   viewportFit: 'cover', // lets the phone tab bar sit above the home indicator
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="en" className={`${geist.variable} h-full antialiased`}>
+    <html lang="en" className={`${overpass.variable} ${overpassMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
         <AuthProvider>{children}</AuthProvider>
       </body>

@@ -31,7 +31,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-1 flex-col">
       {/* Hero */}
-      <section className="bg-brand text-white">
+      <section className="bg-field text-white">
         <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
           <Logo light />
           <Link
@@ -73,23 +73,23 @@ export default function HomePage() {
         <h2 className="text-2xl font-bold tracking-tight">How it works</h2>
         <ol className="mt-8 grid gap-5 sm:grid-cols-3">
           {STEPS.map((step, i) => (
-            <li key={step.title} className="rounded-2xl border border-line bg-white p-6 shadow-sm">
-              <span className="grid size-9 place-items-center rounded-full bg-brand-light font-bold text-brand">
+            <li key={step.title} className="rounded-2xl border border-line bg-surface p-6 shadow-sm">
+              <span className="grid size-9 place-items-center rounded-full bg-brand-tint font-bold text-brand">
                 {i + 1}
               </span>
               <h3 className="mt-4 font-semibold">{step.title}</h3>
-              <p className="mt-1 text-ink-secondary">{step.body}</p>
+              <p className="mt-1 text-text-secondary">{step.body}</p>
             </li>
           ))}
         </ol>
       </section>
 
       {/* Privacy */}
-      <section className="border-y border-line bg-white">
+      <section className="border-y border-line bg-surface">
         <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 md:grid-cols-2">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">Private by design</h2>
-            <p className="mt-3 text-ink-secondary">
+            <p className="mt-3 text-text-secondary">
               RePark is a go-between. It gets the message to the right person without either side
               learning who the other is.
             </p>
@@ -97,7 +97,7 @@ export default function HomePage() {
           <ul className="space-y-3">
             {PRIVACY_POINTS.map(point => (
               <li key={point} className="flex gap-3">
-                <CheckIcon className="mt-0.5 size-5 shrink-0 text-success" />
+                <CheckIcon className="mt-0.5 size-5 shrink-0 text-go" />
                 <span>{point}</span>
               </li>
             ))}
@@ -107,9 +107,9 @@ export default function HomePage() {
 
       {/* Owners */}
       <section className="mx-auto w-full max-w-6xl px-5 py-16">
-        <div className="rounded-2xl bg-brand-light p-8 sm:p-10">
+        <div className="rounded-2xl bg-brand-tint p-8 sm:p-10">
           <h2 className="text-2xl font-bold tracking-tight">Own a car? Register it.</h2>
-          <p className="mt-2 max-w-2xl text-ink-secondary">
+          <p className="mt-2 max-w-2xl text-text-secondary">
             Registered owners get told when their car is in the way, before it gets ticketed or towed.
             Sign in with your phone number, add your plate, and you’re set. Alerts arrive by text if
             you don’t use the app.
@@ -122,8 +122,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="mt-auto border-t border-line bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-6 text-sm text-ink-secondary">
+      <footer className="mt-auto border-t border-line bg-surface">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-6 text-sm text-text-secondary">
           <Logo />
           <span>Anonymous alerts for blocked driveways, loading zones and emergency access.</span>
         </div>

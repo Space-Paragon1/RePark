@@ -40,7 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-10 border-b border-line bg-white/95 backdrop-blur">
+      <header className="sticky top-0 z-10 border-b border-line bg-surface/95 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center gap-6 px-5">
           <Link href="/dashboard" className="py-3">
             <Logo />
@@ -56,7 +56,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   className={`whitespace-nowrap border-b-2 px-3 py-4 text-sm font-medium ${
                     active
                       ? 'border-brand text-brand'
-                      : 'border-transparent text-ink-secondary hover:text-ink'
+                      : 'border-transparent text-text-secondary hover:text-text'
                   }`}
                 >
                   {item.label}
@@ -71,7 +71,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Phone tab bar, like the mobile app */}
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-5 border-t border-line bg-white pb-[env(safe-area-inset-bottom)] sm:hidden"
+        className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-5 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] sm:hidden"
       >
         {NAV.map(item => {
           const active = pathname === item.href;
@@ -81,7 +81,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               href={item.href}
               aria-current={active ? 'page' : undefined}
               className={`flex flex-col items-center gap-1 py-2 text-[11px] font-medium ${
-                active ? 'text-brand' : 'text-ink-secondary'
+                active ? 'text-brand' : 'text-text-secondary'
               }`}
             >
               <item.Icon className="size-6" />

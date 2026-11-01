@@ -6,12 +6,11 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
   Alert,
   RefreshControl,
 } from 'react-native';
-import { colors, shadow, radius } from '@/lib/theme';
+import { font, radius, themedStyles, useTheme } from '@/lib/theme';
 import { PressableScale } from '@/components/PressableScale';
 import { FadeInView } from '@/components/FadeInView';
 import { SkeletonCard } from '@/components/Skeleton';
@@ -34,10 +33,10 @@ const RESPONSE_LABELS: Record<string, string> = {
   abuse_reported:   'Reported as abuse',
 };
 
-const RESPONSE_BUTTONS: { value: OwnerResponseType; label: string; color: string }[] = [
-  { value: 'moving_now',       label: 'Moving Now',       color: '#2563EB' },
-  { value: 'already_moved',    label: 'Already Moved',    color: '#16A34A' },
-  { value: 'incorrect_report', label: 'Incorrect Report', color: '#DC2626' },
+const RESPONSE_BUTTONS: { value: OwnerResponseType; label: string; tone: 'brand' | 'go' | 'stop' }[] = [
+  { value: 'moving_now',       label: 'Moving Now',       tone: 'brand' },
+  { value: 'already_moved',    label: 'Already Moved',    tone: 'go' },
+  { value: 'incorrect_report', label: 'Incorrect Report', tone: 'stop' },
 ];
 
 // ─── Alert Card ───────────────────────────────────────────────────────────────
@@ -51,6 +50,8 @@ function AlertCard({
   onRespond: (id: string, response: OwnerResponseType) => void;
   responding: boolean;
 }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const responded = !!alert.owner_response;
   const reportedDate = new Date(alert.reported_at).toLocaleString();
 
@@ -101,14 +102,14 @@ function AlertCard({
           {RESPONSE_BUTTONS.map(btn => (
             <PressableScale
               key={btn.value}
-              style={[styles.responseBtn, { borderColor: btn.color }, responding && styles.buttonDisabled]}
+              style={[styles.responseBtn, { borderColor: colors[btn.tone] }, responding && styles.buttonDisabled]}
               onPress={() => confirmRespond(btn.value, btn.label)}
               disabled={responding}
             >
               {responding ? (
-                <ActivityIndicator color={btn.color} size="small" />
+                <ActivityIndicator color={colors[btn.tone]} size="small" />
               ) : (
-                <Text style={[styles.responseBtnText, { color: btn.color }]}>{btn.label}</Text>
+                <Text style={[styles.responseBtnText, { color: colors[btn.tone] }]}>{btn.label}</Text>
               )}
             </PressableScale>
           ))}
@@ -121,6 +122,8 @@ function AlertCard({
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function AlertsScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [alerts, setAlerts] = useState<AlertDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -202,7 +205,7 @@ export default function AlertsScreen() {
         keyExtractor={a => a.id}
         contentContainerStyle={{ padding: 16, paddingBottom: 32, flexGrow: 1 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#2563EB" />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.brand} />
         }
         ListEmptyComponent={
           <View style={styles.empty}>
@@ -229,25 +232,26 @@ export default function AlertsScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
+const useStyles = themedStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.bg },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     paddingHorizontal: 20,
     paddingTop: 64,
     paddingBottom: 18,
-    backgroundColor: colors.card,
+    backgroundColor: c.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.line,
   },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text },
-  subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
+  title: { fontSize: 24, fontFamily: font.heading, color: c.text },
+  subtitle: { fontSize: 13, color: c.textMuted, marginTop: 3 },
   card: {
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
+    backgroundColor: c.surface,
+    borderRadius: radius.card,
     padding: 16,
     marginBottom: 10,
-    ...shadow.sm,
+    borderWidth: 1,
+    borderColor: c.line,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -255,35 +259,35 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 10,
   },
-  plate: { fontSize: 20, fontWeight: '800', color: colors.text, letterSpacing: 1 },
-  vehicleDesc: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.full },
-  badgePending: { backgroundColor: '#FEF3C7' },
-  badgeResponded: { backgroundColor: colors.successLight },
+  plate: { fontSize: 20, fontFamily: font.mono, color: c.text, letterSpacing: 1 },
+  vehicleDesc: { fontSize: 13, color: c.textSecondary, marginTop: 2 },
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
+  badgePending: { backgroundColor: c.signal },
+  badgeResponded: { backgroundColor: c.goTint },
   badgeText: { fontSize: 11, fontWeight: '700' },
-  badgeTextPending: { color: '#92400E' },
-  badgeTextResponded: { color: colors.success },
+  badgeTextPending: { color: c.onSignal },
+  badgeTextResponded: { color: c.go },
   issueRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
   issueIcon: { fontSize: 14, marginRight: 6 },
-  issueText: { fontSize: 14, color: colors.textSecondary, flex: 1 },
-  reportedAt: { fontSize: 11, color: colors.textMuted, marginBottom: 14 },
+  issueText: { fontSize: 14, color: c.textSecondary, flex: 1 },
+  reportedAt: { fontSize: 11, fontFamily: font.monoMedium, color: c.textMuted, marginBottom: 14 },
   responseRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 6 },
-  responseLabel: { fontSize: 13, color: colors.textMuted },
-  responseValue: { fontSize: 13, fontWeight: '700', color: colors.text },
+  responseLabel: { fontSize: 13, color: c.textMuted },
+  responseValue: { fontSize: 13, fontWeight: '700', color: c.text },
   responseButtons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   responseBtn: {
     borderWidth: 1.5,
-    borderRadius: radius.sm,
+    borderRadius: radius.control,
     paddingVertical: 8,
     paddingHorizontal: 14,
     minWidth: 105,
     alignItems: 'center',
-    backgroundColor: colors.bg,
+    backgroundColor: c.bg,
   },
   responseBtnText: { fontSize: 13, fontWeight: '700' },
   buttonDisabled: { opacity: 0.5 },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
   emptyIcon: { fontSize: 56, marginBottom: 16 },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: 8 },
-  emptySub: { fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 21 },
-});
+  emptyTitle: { fontSize: 20, fontFamily: font.headingBold, color: c.text, marginBottom: 8 },
+  emptySub: { fontSize: 14, color: c.textSecondary, textAlign: 'center', lineHeight: 21 },
+}));

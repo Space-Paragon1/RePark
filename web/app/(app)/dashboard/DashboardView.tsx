@@ -38,26 +38,26 @@ export function DashboardView() {
       {pendingAlerts.length > 0 && (
         <Link
           href="/alerts"
-          className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-warning-light p-5 hover:border-amber-300"
+          className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-signal/50 bg-signal-tint p-5 hover:border-signal"
         >
           <span>
-            <span className="block font-semibold text-warning">
+            <span className="block font-semibold text-text">
               {pendingAlerts.length === 1 ? 'Your car was reported' : `${pendingAlerts.length} alerts about your cars`}
             </span>
-            <span className="text-sm text-ink-secondary">Let the reporter know if you’re moving it.</span>
+            <span className="text-sm text-text-secondary">Let the reporter know if you’re moving it.</span>
           </span>
-          <ArrowRightIcon className="size-5 shrink-0 text-warning" />
+          <ArrowRightIcon className="size-5 shrink-0 text-text" />
         </Link>
       )}
 
       <div className="grid gap-4 sm:grid-cols-3">
         {stats.map(stat => (
           <Link key={stat.label} href={stat.href}>
-            <Card className="h-full hover:border-brand-border">
-              <p className="text-3xl font-bold text-ink">
+            <Card className="h-full hover:border-brand">
+              <p className="text-3xl font-bold text-text">
                 {loading ? <Spinner className="size-6 text-brand" /> : stat.value ?? '—'}
               </p>
-              <p className="mt-1 text-sm text-ink-secondary">{stat.label}</p>
+              <p className="mt-1 text-sm text-text-secondary">{stat.label}</p>
             </Card>
           </Link>
         ))}
@@ -71,7 +71,7 @@ export function DashboardView() {
           )}
         </div>
         {data && data.reports.length === 0 && (
-          <p className="text-ink-secondary">You haven’t reported any cars yet.</p>
+          <p className="text-text-secondary">You haven’t reported any cars yet.</p>
         )}
         <ul className="space-y-3">
           {data?.reports.slice(0, 3).map(report => {
@@ -81,7 +81,7 @@ export function DashboardView() {
                 <Card className="flex items-center justify-between gap-4 p-4">
                   <div>
                     <p className="font-semibold">{report.plate_number}</p>
-                    <p className="text-sm text-ink-secondary">
+                    <p className="text-sm text-text-secondary">
                       {issueLabel(report.issue_type)} · {formatDateTime(report.created_at)}
                     </p>
                   </div>

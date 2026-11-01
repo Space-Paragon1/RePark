@@ -5,10 +5,10 @@ import type { Tone } from '@/lib/labels';
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 
 const BUTTON_STYLES: Record<ButtonVariant, string> = {
-  primary:   'bg-brand text-white hover:bg-brand-dark disabled:bg-brand/50',
-  secondary: 'bg-white text-ink border border-line hover:bg-slate-50 disabled:text-ink-muted',
-  danger:    'bg-white text-danger border border-red-200 hover:bg-danger-light disabled:opacity-50',
-  ghost:     'text-ink-secondary hover:bg-slate-100 disabled:opacity-50',
+  primary:   'bg-brand text-on-brand hover:bg-brand-pressed disabled:bg-brand/50',
+  secondary: 'bg-surface text-text border border-line hover:bg-surface-sunken disabled:text-text-muted',
+  danger:    'bg-surface text-stop border border-stop/30 hover:bg-stop-tint disabled:opacity-50',
+  ghost:     'text-text-secondary hover:bg-surface-sunken disabled:opacity-50',
 };
 
 const BUTTON_BASE =
@@ -66,16 +66,16 @@ export function Spinner({ className = 'size-6' }: { className?: string }) {
 
 export function Card({ className = '', children }: { className?: string; children: React.ReactNode }) {
   return (
-    <div className={`rounded-2xl border border-line bg-white p-5 shadow-sm ${className}`}>{children}</div>
+    <div className={`rounded-2xl border border-line bg-surface p-5 shadow-sm ${className}`}>{children}</div>
   );
 }
 
 const BADGE_TONES: Record<Tone, string> = {
-  neutral: 'bg-slate-100 text-slate-600',
-  blue:    'bg-brand-light text-brand',
-  green:   'bg-success-light text-success',
-  red:     'bg-danger-light text-danger',
-  amber:   'bg-warning-light text-warning',
+  neutral: 'bg-surface-sunken text-text-secondary',
+  blue:    'bg-brand-tint text-brand',
+  green:   'bg-go-tint text-go',
+  red:     'bg-stop-tint text-stop',
+  amber:   'bg-signal text-on-signal',
 };
 
 export function Badge({ tone, children }: { tone: Tone; children: React.ReactNode }) {
@@ -97,16 +97,16 @@ export function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-ink">{label}</span>
+      <span className="mb-1.5 block text-sm font-medium text-text">{label}</span>
       {children}
-      {hint && <span className="mt-1.5 block text-xs text-ink-muted">{hint}</span>}
+      {hint && <span className="mt-1.5 block text-xs text-text-muted">{hint}</span>}
     </label>
   );
 }
 
 export const inputClass =
-  'block w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-base text-ink ' +
-  'placeholder:text-ink-muted focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20';
+  'block w-full rounded-lg border border-line bg-surface px-3.5 py-2.5 text-base text-text ' +
+  'placeholder:text-text-muted focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20';
 
 export function PageHeader({ title, subtitle, action }: {
   title: string;
@@ -116,8 +116,8 @@ export function PageHeader({ title, subtitle, action }: {
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-ink">{title}</h1>
-        {subtitle && <p className="mt-1 text-ink-secondary">{subtitle}</p>}
+        <h1 className="text-2xl font-bold tracking-tight text-text">{title}</h1>
+        {subtitle && <p className="mt-1 text-text-secondary">{subtitle}</p>}
       </div>
       {action}
     </div>
@@ -127,7 +127,7 @@ export function PageHeader({ title, subtitle, action }: {
 export function ErrorBanner({ message }: { message: string | null }) {
   if (!message) return null;
   return (
-    <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-danger-light px-4 py-3 text-sm text-danger">
+    <div role="alert" className="mb-4 rounded-lg border border-stop/30 bg-stop-tint px-4 py-3 text-sm text-stop">
       {message}
     </div>
   );
@@ -139,9 +139,9 @@ export function EmptyState({ title, body, action }: {
   action?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-dashed border-line bg-white px-6 py-12 text-center">
-      <p className="font-semibold text-ink">{title}</p>
-      <p className="mx-auto mt-1 max-w-sm text-sm text-ink-secondary">{body}</p>
+    <div className="rounded-2xl border border-dashed border-line bg-surface px-6 py-12 text-center">
+      <p className="font-semibold text-text">{title}</p>
+      <p className="mx-auto mt-1 max-w-sm text-sm text-text-secondary">{body}</p>
       {action && <div className="mt-5">{action}</div>}
     </div>
   );
@@ -152,12 +152,12 @@ export function Logo({ light = false }: { light?: boolean }) {
     <span className="inline-flex items-center gap-2">
       <span
         className={`grid size-8 place-items-center rounded-lg text-lg font-black ${
-          light ? 'bg-white text-brand' : 'bg-brand text-white'
+          light ? 'bg-white text-field' : 'bg-brand text-on-brand'
         }`}
       >
         P
       </span>
-      <span className={`text-lg font-bold tracking-tight ${light ? 'text-white' : 'text-ink'}`}>RePark</span>
+      <span className={`text-lg font-bold tracking-tight ${light ? 'text-white' : 'text-text'}`}>RePark</span>
     </span>
   );
 }

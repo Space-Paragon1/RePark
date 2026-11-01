@@ -1,9 +1,10 @@
 import { Redirect, Tabs } from 'expo-router';
-import { Text, View, StyleSheet, type ColorValue } from 'react-native';
+import { Text, View, type ColorValue } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { colors } from '@/lib/theme';
+import { themedStyles, useTheme } from '@/lib/theme';
 
 function TabIcon({ emoji, color, focused }: { emoji: string; color: ColorValue; focused: boolean }) {
+  const s = useStyles();
   return (
     <View style={[s.iconWrap, focused && s.iconWrapActive]}>
       <Text style={s.iconText}>{emoji}</Text>
@@ -12,6 +13,7 @@ function TabIcon({ emoji, color, focused }: { emoji: string; color: ColorValue; 
 }
 
 export default function TabLayout() {
+  const { colors } = useTheme();
   const { session, loading } = useAuth();
   if (loading) return null;
   if (!session) return <Redirect href="/(auth)" />;
@@ -19,11 +21,11 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.primary,
+        tabBarActiveTintColor: colors.brand,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: '#fff',
-          borderTopColor: colors.border,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.line,
           borderTopWidth: 1,
         },
         tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
@@ -69,7 +71,7 @@ export default function TabLayout() {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   iconWrap: {
     width: 32,
     height: 28,
@@ -78,7 +80,7 @@ const s = StyleSheet.create({
     borderRadius: 8,
   },
   iconWrapActive: {
-    backgroundColor: colors.primaryLight,
+    backgroundColor: c.brandTint,
   },
   iconText: { fontSize: 18 },
-});
+}));

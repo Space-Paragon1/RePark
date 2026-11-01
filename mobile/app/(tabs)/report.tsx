@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   ScrollView,
   FlatList,
   ActivityIndicator,
@@ -19,6 +18,7 @@ import { useFocusEffect } from 'expo-router';
 import { IssueType, Report, reportsApi } from '@/lib/api';
 import { PressableScale } from '@/components/PressableScale';
 import { FadeInView } from '@/components/FadeInView';
+import { font, radius, themedStyles, useTheme, type Colors } from '@/lib/theme';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -30,19 +30,21 @@ const ISSUE_TYPES: { value: IssueType; label: string }[] = [
   { value: 'emergency_access',    label: 'Emergency access blocked' },
 ];
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  submitted:  { label: 'Submitted',        color: '#6B7280', bg: '#F3F4F6' },
-  notified:   { label: 'Owner Notified',   color: '#2563EB', bg: '#EFF6FF' },
-  responded:  { label: 'Owner Responded',  color: '#16A34A', bg: '#F0FDF4' },
-  rejected:   { label: 'Incorrect Report', color: '#DC2626', bg: '#FEF2F2' },
-  closed:     { label: 'No Response',      color: '#6B7280', bg: '#F3F4F6' },
+type StatusTone = { label: string; color: keyof Colors; bg: keyof Colors };
+
+const STATUS_CONFIG: Record<string, StatusTone> = {
+  submitted:  { label: 'Submitted',        color: 'textSecondary', bg: 'surfaceSunken' },
+  notified:   { label: 'Owner Notified',   color: 'brand',         bg: 'brandTint' },
+  responded:  { label: 'Owner Responded',  color: 'go',            bg: 'goTint' },
+  rejected:   { label: 'Incorrect Report', color: 'stop',          bg: 'stopTint' },
+  closed:     { label: 'No Response',      color: 'textSecondary', bg: 'surfaceSunken' },
 };
 
 // Plate wasn't registered, so no alert went out. The backend waits 2 hours for
 // the owner to join, then closes the report.
-const NOT_REGISTERED = {
-  waiting: { label: 'Owner Not on RePark Yet', color: '#B45309', bg: '#FFFBEB' },
-  closed:  { label: 'Owner Not on RePark',     color: '#6B7280', bg: '#F3F4F6' },
+const NOT_REGISTERED: Record<'waiting' | 'closed', StatusTone> = {
+  waiting: { label: 'Owner Not on RePark Yet', color: 'brand',         bg: 'brandTint' },
+  closed:  { label: 'Owner Not on RePark',     color: 'textSecondary', bg: 'surfaceSunken' },
 };
 
 function statusFor(report: Report) {
@@ -55,6 +57,8 @@ function statusFor(report: Report) {
 // ─── Success Card ─────────────────────────────────────────────────────────────
 
 function SuccessCard({ report, onReset }: { report: Report; onReset: () => void }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const issueLabel = ISSUE_TYPES.find(i => i.value === report.issue_type)?.label ?? report.issue_type;
   const iconScale = useRef(new Animated.Value(0)).current;
   const cardOpacity = useRef(new Animated.Value(0)).current;
@@ -97,7 +101,7 @@ function SuccessCard({ report, onReset }: { report: Report; onReset: () => void 
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Status</Text>
-            <Text style={[styles.detailValue, { color: report.owner_notified ? '#16A34A' : '#6B7280' }]}>
+            <Text style={[styles.detailValue, { color: report.owner_notified ? colors.go : colors.textMuted }]}>
               {report.owner_notified ? 'Owner notified' : 'Waiting for owner to join'}
             </Text>
           </View>
@@ -113,6 +117,8 @@ function SuccessCard({ report, onReset }: { report: Report; onReset: () => void 
 // ─── Report History Item ───────────────────────────────────────────────────────
 
 function ReportHistoryItem({ report }: { report: Report }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const issueLabel = ISSUE_TYPES.find(i => i.value === report.issue_type)?.label ?? report.issue_type;
   const status = statusFor(report);
   const date = new Date(report.created_at).toLocaleString();
@@ -121,8 +127,8 @@ function ReportHistoryItem({ report }: { report: Report }) {
     <View style={styles.historyCard}>
       <View style={styles.historyHeader}>
         <Text style={styles.historyPlate}>{report.plate_number}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
-          <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+        <View style={[styles.statusBadge, { backgroundColor: colors[status.bg] }]}>
+          <Text style={[styles.statusText, { color: colors[status.color] }]}>{status.label}</Text>
         </View>
       </View>
       <Text style={styles.historyIssue}>{issueLabel}</Text>
@@ -134,6 +140,8 @@ function ReportHistoryItem({ report }: { report: Report }) {
 // ─── New Report Form ──────────────────────────────────────────────────────────
 
 function NewReportForm({ onSuccess }: { onSuccess: (r: Report) => void }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [plate, setPlate] = useState('');
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [issueType, setIssueType] = useState<IssueType | null>(null);
@@ -192,7 +200,7 @@ function NewReportForm({ onSuccess }: { onSuccess: (r: Report) => void }) {
           value={plate}
           onChangeText={setPlate}
           placeholder="e.g. ABC 123"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textMuted}
           autoCapitalize="characters"
           autoCorrect={false}
         />
@@ -204,7 +212,7 @@ function NewReportForm({ onSuccess }: { onSuccess: (r: Report) => void }) {
           disabled={locating}
         >
           {locating ? (
-            <ActivityIndicator color="#2563EB" size="small" />
+            <ActivityIndicator color={colors.brand} size="small" />
           ) : (
             <Text style={[styles.locationBtnText, location && styles.locationBtnTextActive]}>
               {location
@@ -234,7 +242,7 @@ function NewReportForm({ onSuccess }: { onSuccess: (r: Report) => void }) {
           value={message}
           onChangeText={setMessage}
           placeholder="Any extra details..."
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textMuted}
           multiline
           numberOfLines={3}
         />
@@ -244,7 +252,7 @@ function NewReportForm({ onSuccess }: { onSuccess: (r: Report) => void }) {
           onPress={handleSubmit}
           disabled={submitting}
         >
-          {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitBtnText}>Send Alert</Text>}
+          {submitting ? <ActivityIndicator color={colors.onBrand} /> : <Text style={styles.submitBtnText}>Send Alert</Text>}
         </PressableScale>
 
         <Text style={styles.privacyNote}>
@@ -258,6 +266,8 @@ function NewReportForm({ onSuccess }: { onSuccess: (r: Report) => void }) {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function ReportScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [tab, setTab] = useState<'new' | 'history'>('new');
   const [result, setResult] = useState<Report | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
@@ -323,7 +333,7 @@ export default function ReportScreen() {
         <NewReportForm onSuccess={handleSuccess} />
       ) : loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator color="#2563EB" size="large" />
+          <ActivityIndicator color={colors.brand} size="large" />
         </View>
       ) : (
         <FlatList
@@ -334,7 +344,7 @@ export default function ReportScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => { setRefreshing(true); loadHistory(true); }}
-              tintColor="#2563EB"
+              tintColor={colors.brand}
             />
           }
           ListEmptyComponent={
@@ -357,16 +367,16 @@ export default function ReportScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+const useStyles = themedStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.bg },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   content: { padding: 24, paddingBottom: 48 },
 
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: c.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: c.line,
     paddingTop: 56,
     paddingHorizontal: 16,
   },
@@ -377,67 +387,67 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
   },
-  tabBtnActive: { borderBottomColor: '#2563EB' },
-  tabBtnText: { fontSize: 14, fontWeight: '600', color: '#6B7280' },
-  tabBtnTextActive: { color: '#2563EB' },
+  tabBtnActive: { borderBottomColor: c.brand },
+  tabBtnText: { fontSize: 14, fontWeight: '600', color: c.textMuted },
+  tabBtnTextActive: { color: c.brand },
 
-  title: { fontSize: 24, fontWeight: '700', color: '#111827', marginTop: 24, marginBottom: 4 },
-  subtitle: { fontSize: 14, color: '#6B7280', marginBottom: 28 },
-  label: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8, marginTop: 20 },
+  title: { fontSize: 24, fontFamily: font.heading, color: c.text, marginTop: 24, marginBottom: 4 },
+  subtitle: { fontSize: 14, color: c.textSecondary, marginBottom: 28 },
+  label: { fontSize: 13, fontWeight: '600', color: c.textSecondary, marginBottom: 8, marginTop: 20 },
   input: {
-    borderWidth: 1.5, borderColor: '#D1D5DB', borderRadius: 10,
-    paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: '#111827', backgroundColor: '#fff',
+    borderWidth: 1.5, borderColor: c.lineStrong, borderRadius: radius.control,
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: c.text, backgroundColor: c.surface,
   },
   textArea: { height: 88, textAlignVertical: 'top' },
   locationBtn: {
-    borderWidth: 1.5, borderColor: '#D1D5DB', borderRadius: 10,
-    paddingVertical: 14, paddingHorizontal: 16, backgroundColor: '#fff', alignItems: 'center',
+    borderWidth: 1.5, borderColor: c.lineStrong, borderRadius: radius.control,
+    paddingVertical: 14, paddingHorizontal: 16, backgroundColor: c.surface, alignItems: 'center',
   },
-  locationBtnActive: { borderColor: '#2563EB', backgroundColor: '#EFF6FF' },
-  locationBtnText: { fontSize: 14, color: '#6B7280', fontWeight: '500' },
-  locationBtnTextActive: { color: '#2563EB' },
+  locationBtnActive: { borderColor: c.brand, backgroundColor: c.brandTint },
+  locationBtnText: { fontSize: 14, color: c.textSecondary, fontWeight: '500' },
+  locationBtnTextActive: { color: c.brand },
   issueOption: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',
-    borderWidth: 1.5, borderColor: '#D1D5DB', borderRadius: 10, padding: 14, marginBottom: 8,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: c.surface,
+    borderWidth: 1.5, borderColor: c.lineStrong, borderRadius: radius.control, padding: 14, marginBottom: 8,
   },
-  issueOptionActive: { borderColor: '#2563EB', backgroundColor: '#EFF6FF' },
-  radio: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: '#D1D5DB', marginRight: 12 },
-  radioActive: { borderColor: '#2563EB', backgroundColor: '#2563EB' },
-  issueLabel: { fontSize: 14, color: '#374151', flex: 1 },
-  issueLabelActive: { color: '#1D4ED8', fontWeight: '600' },
-  submitBtn: { backgroundColor: '#2563EB', borderRadius: 10, paddingVertical: 15, alignItems: 'center', marginTop: 28 },
+  issueOptionActive: { borderColor: c.brand, backgroundColor: c.brandTint },
+  radio: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: c.lineStrong, marginRight: 12 },
+  radioActive: { borderColor: c.brand, backgroundColor: c.brand },
+  issueLabel: { fontSize: 14, color: c.textSecondary, flex: 1 },
+  issueLabelActive: { color: c.brand, fontWeight: '600' },
+  submitBtn: { backgroundColor: c.brand, borderRadius: radius.control, paddingVertical: 15, alignItems: 'center', marginTop: 28 },
   buttonDisabled: { opacity: 0.6 },
-  submitBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  privacyNote: { fontSize: 12, color: '#9CA3AF', textAlign: 'center', marginTop: 12 },
+  submitBtnText: { color: c.onBrand, fontSize: 16, fontWeight: '600' },
+  privacyNote: { fontSize: 12, color: c.textMuted, textAlign: 'center', marginTop: 12 },
 
   historyCard: {
-    backgroundColor: '#fff', borderRadius: 12, padding: 16,
-    marginBottom: 12, borderWidth: 1, borderColor: '#E5E7EB',
+    backgroundColor: c.surface, borderRadius: radius.card, padding: 16,
+    marginBottom: 12, borderWidth: 1, borderColor: c.line,
   },
   historyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  historyPlate: { fontSize: 17, fontWeight: '700', color: '#111827', letterSpacing: 1 },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  historyPlate: { fontSize: 17, fontFamily: font.mono, color: c.text, letterSpacing: 1 },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
   statusText: { fontSize: 12, fontWeight: '600' },
-  historyIssue: { fontSize: 13, color: '#374151', marginBottom: 4 },
-  historyDate: { fontSize: 12, color: '#9CA3AF' },
+  historyIssue: { fontSize: 13, color: c.textSecondary, marginBottom: 4 },
+  historyDate: { fontSize: 12, fontFamily: font.monoMedium, color: c.textMuted },
 
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
   emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '600', color: '#111827', marginBottom: 8 },
-  emptySub: { fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 20 },
+  emptyTitle: { fontSize: 18, fontFamily: font.headingBold, color: c.text, marginBottom: 8 },
+  emptySub: { fontSize: 14, color: c.textSecondary, textAlign: 'center', lineHeight: 20 },
 
-  successContainer: { flex: 1, backgroundColor: '#F9FAFB', padding: 24, justifyContent: 'center' },
+  successContainer: { flex: 1, backgroundColor: c.bg, padding: 24, justifyContent: 'center' },
   successCard: {
-    backgroundColor: '#fff', borderRadius: 16, padding: 28, alignItems: 'center',
-    borderWidth: 1, borderColor: '#E5E7EB', marginBottom: 20,
+    backgroundColor: c.surface, borderRadius: radius.card, padding: 28, alignItems: 'center',
+    borderWidth: 1, borderColor: c.line, marginBottom: 20,
   },
   successIcon: { fontSize: 48, marginBottom: 16 },
-  successTitle: { fontSize: 22, fontWeight: '700', color: '#111827', marginBottom: 8 },
-  successSub: { fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 20, marginBottom: 24 },
-  successDetails: { width: '100%', borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 16 },
+  successTitle: { fontSize: 22, fontFamily: font.headingBold, color: c.text, marginBottom: 8 },
+  successSub: { fontSize: 14, color: c.textSecondary, textAlign: 'center', lineHeight: 20, marginBottom: 24 },
+  successDetails: { width: '100%', borderTopWidth: 1, borderTopColor: c.line, paddingTop: 16 },
   detailRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  detailLabel: { fontSize: 13, color: '#6B7280' },
-  detailValue: { fontSize: 13, fontWeight: '600', color: '#111827' },
-  resetBtn: { borderWidth: 1.5, borderColor: '#2563EB', borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
-  resetBtnText: { color: '#2563EB', fontWeight: '600', fontSize: 15 },
-});
+  detailLabel: { fontSize: 13, color: c.textMuted },
+  detailValue: { fontSize: 13, fontWeight: '600', color: c.text },
+  resetBtn: { borderWidth: 1.5, borderColor: c.brand, borderRadius: radius.control, paddingVertical: 14, alignItems: 'center' },
+  resetBtnText: { color: c.brand, fontWeight: '600', fontSize: 15 },
+}));

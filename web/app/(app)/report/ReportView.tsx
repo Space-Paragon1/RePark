@@ -57,7 +57,7 @@ export function ReportView() {
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <h2 className="text-lg font-semibold">Your reports</h2>
           {waiting && (
-            <p className="text-xs text-ink-muted">Updates automatically while this page is open</p>
+            <p className="text-xs text-text-muted">Updates automatically while this page is open</p>
           )}
         </div>
         <ErrorBanner message={history.error} />
@@ -76,7 +76,7 @@ export function ReportView() {
                 <Card className="flex items-center justify-between gap-4 p-4">
                   <div>
                     <p className="font-semibold">{report.plate_number}</p>
-                    <p className="text-sm text-ink-secondary">
+                    <p className="text-sm text-text-secondary">
                       {issueLabel(report.issue_type)} · {formatDateTime(report.created_at)}
                     </p>
                   </div>
@@ -172,13 +172,13 @@ function ReportForm({ initialPlate, onSubmitted }: {
         <div>
           <span className="mb-1.5 block text-sm font-medium">Your location</span>
           {location ? (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-success-light px-4 py-3">
-              <span className="text-sm text-success">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-go/30 bg-go-tint px-4 py-3">
+              <span className="text-sm text-go">
                 <span className="inline-flex items-center gap-1.5 font-medium">
                   <CheckIcon className="size-4" /> Location confirmed
                 </span>
                 {location.accuracy > APPROXIMATE_METRES && (
-                  <span className="block text-warning">
+                  <span className="block text-text">
                     Only approximate (within about {Math.round(location.accuracy / 100) / 10} km).
                     For better accuracy, report from your phone.
                   </span>
@@ -193,7 +193,7 @@ function ReportForm({ initialPlate, onSubmitted }: {
               Use my current location
             </Button>
           )}
-          <span className="mt-1.5 block text-xs text-ink-muted">
+          <span className="mt-1.5 block text-xs text-text-muted">
             Used to check you’re near the car. It isn’t shown to the owner.
           </span>
         </div>
@@ -206,8 +206,8 @@ function ReportForm({ initialPlate, onSubmitted }: {
                 key={issue.value}
                 className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-sm ${
                   issueType === issue.value
-                    ? 'border-brand bg-brand-light font-medium text-brand'
-                    : 'border-line hover:border-slate-300'
+                    ? 'border-brand bg-brand-tint font-medium text-brand'
+                    : 'border-line hover:border-line-strong'
                 }`}
               >
                 <input
@@ -247,7 +247,7 @@ function SubmittedCard({ report, onDone }: { report: Report; onDone: () => void 
     <Card className="p-8 text-center">
       <span
         className={`mx-auto grid size-16 place-items-center rounded-full ${
-          report.owner_notified ? 'bg-success-light text-success' : 'bg-warning-light text-warning'
+          report.owner_notified ? 'bg-go-tint text-go' : 'bg-signal-tint text-text'
         }`}
       >
         {report.owner_notified ? <CheckIcon className="size-8" /> : <ClockIcon className="size-8" />}
@@ -255,7 +255,7 @@ function SubmittedCard({ report, onDone }: { report: Report; onDone: () => void 
       <h2 className="mt-4 text-xl font-bold">
         {report.owner_notified ? 'Owner alerted' : 'Report saved'}
       </h2>
-      <p className="mx-auto mt-2 max-w-md text-ink-secondary">
+      <p className="mx-auto mt-2 max-w-md text-text-secondary">
         {report.owner_notified
           ? 'We’ve sent the owner an anonymous alert. You’ll see their response in your reports below.'
           : 'This plate isn’t on RePark yet. If the owner registers it in the next 2 hours, we’ll alert them.'}

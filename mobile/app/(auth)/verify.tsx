@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
@@ -12,10 +11,12 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
-import { colors, shadow, radius } from '@/lib/theme';
+import { font, radius, themedStyles, useTheme } from '@/lib/theme';
 import { PressableScale } from '@/components/PressableScale';
 
 export default function VerifyScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { phone } = useLocalSearchParams<{ phone: string }>();
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -78,13 +79,13 @@ export default function VerifyScreen() {
           disabled={loading || otp.length < 6}
         >
           {loading
-            ? <ActivityIndicator color="#fff" />
+            ? <ActivityIndicator color={colors.onBrand} />
             : <Text style={styles.buttonText}>Verify & Sign In</Text>}
         </PressableScale>
 
         <PressableScale style={styles.resend} onPress={handleResend} disabled={resending}>
           {resending
-            ? <ActivityIndicator color={colors.primary} size="small" />
+            ? <ActivityIndicator color={colors.brand} size="small" />
             : <Text style={styles.resendText}>Didn't receive it? Resend code</Text>}
         </PressableScale>
       </View>
@@ -92,8 +93,8 @@ export default function VerifyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.primary },
+const useStyles = themedStyles((c, sh) => ({
+  root: { flex: 1, backgroundColor: c.field },
 
   hero: {
     flex: 1,
@@ -104,52 +105,51 @@ const styles = StyleSheet.create({
   iconBox: {
     width: 72,
     height: 72,
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
   },
   iconText: { fontSize: 36 },
-  heroTitle: { fontSize: 22, fontWeight: '700', color: '#fff', marginBottom: 6 },
+  heroTitle: { fontSize: 22, fontFamily: font.headingBold, color: '#fff', marginBottom: 6 },
   heroSub: { fontSize: 14, color: 'rgba(255,255,255,0.75)' },
 
   card: {
-    backgroundColor: colors.card,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    backgroundColor: c.surface,
+    borderTopLeftRadius: radius.sheet,
+    borderTopRightRadius: radius.sheet,
     padding: 28,
     paddingBottom: 48,
-    ...shadow.md,
+    ...sh.e2,
   },
   back: { marginBottom: 20 },
-  backText: { fontSize: 14, color: colors.primary, fontWeight: '500' },
-  cardTitle: { fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: 20 },
+  backText: { fontSize: 14, color: c.brand, fontWeight: '500' },
+  cardTitle: { fontSize: 20, fontFamily: font.headingBold, color: c.text, marginBottom: 20 },
 
   otpInput: {
     borderWidth: 2,
-    borderColor: colors.primaryBorder,
-    borderRadius: radius.md,
+    borderColor: c.brand,
+    borderRadius: radius.control,
     paddingVertical: 18,
     fontSize: 32,
-    fontWeight: '700',
+    fontFamily: font.mono,
     letterSpacing: 12,
-    color: colors.text,
-    backgroundColor: colors.primaryLight,
+    color: c.text,
+    backgroundColor: c.brandTint,
     marginBottom: 24,
   },
 
   button: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
+    backgroundColor: c.brand,
+    borderRadius: radius.control,
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 16,
-    ...shadow.sm,
   },
   buttonDisabled: { opacity: 0.5 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  buttonText: { color: c.onBrand, fontSize: 16, fontWeight: '700' },
 
   resend: { alignItems: 'center', paddingVertical: 10 },
-  resendText: { color: colors.primary, fontSize: 14, fontWeight: '500' },
-});
+  resendText: { color: c.brand, fontSize: 14, fontWeight: '500' },
+}));

@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Alert, Share, ActivityIndicator } from 'react-native';
+import { View, Text, Alert, Share, ActivityIndicator } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { accountApi } from '@/lib/api';
-import { colors, shadow, radius } from '@/lib/theme';
+import { font, radius, themedStyles, useTheme } from '@/lib/theme';
 import { PressableScale } from '@/components/PressableScale';
 import { FadeInView } from '@/components/FadeInView';
 
 export default function ProfileScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { session, signOut } = useAuth();
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -73,7 +75,7 @@ export default function ProfileScreen() {
             sublabel="Download everything RePark holds about you"
             onPress={handleExport}
             loading={exporting}
-            color={colors.primary}
+            color={colors.brand}
           />
         </View>
       </FadeInView>
@@ -94,7 +96,7 @@ export default function ProfileScreen() {
             sublabel="Permanently remove all your data"
             onPress={handleDelete}
             loading={deleting}
-            color={colors.danger}
+            color={colors.stop}
           />
         </View>
       </FadeInView>
@@ -110,6 +112,7 @@ function MenuItem({
   icon: string; label: string; sublabel: string;
   onPress: () => void; loading?: boolean; color: string;
 }) {
+  const styles = useStyles();
   return (
     <PressableScale style={styles.menuItem} onPress={onPress} disabled={loading}>
       <View style={[styles.menuIcon, { backgroundColor: `${color}18` }]}>
@@ -126,11 +129,11 @@ function MenuItem({
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
+const useStyles = themedStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.bg },
 
   hero: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.field,
     paddingTop: 72,
     paddingBottom: 36,
     alignItems: 'center',
@@ -138,7 +141,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 72,
     height: 72,
-    borderRadius: radius.full,
+    borderRadius: radius.pill,
     backgroundColor: 'rgba(255,255,255,0.25)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -146,19 +149,20 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.4)',
   },
-  avatarText: { fontSize: 24, fontWeight: '800', color: '#fff' },
-  heroPhone: { fontSize: 18, fontWeight: '700', color: '#fff', marginBottom: 4 },
+  avatarText: { fontSize: 24, fontFamily: font.heading, color: '#fff' },
+  heroPhone: { fontSize: 18, fontFamily: font.mono, color: '#fff', marginBottom: 4 },
   heroLabel: { fontSize: 13, color: 'rgba(255,255,255,0.65)' },
 
   section: {
-    backgroundColor: colors.card,
+    backgroundColor: c.surface,
     marginHorizontal: 16,
     marginTop: 16,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     overflow: 'hidden',
-    ...shadow.sm,
+    borderWidth: 1,
+    borderColor: c.line,
   },
-  divider: { height: 1, backgroundColor: colors.border, marginLeft: 62 },
+  divider: { height: 1, backgroundColor: c.line, marginLeft: 62 },
 
   menuItem: {
     flexDirection: 'row',
@@ -168,7 +172,7 @@ const styles = StyleSheet.create({
   menuIcon: {
     width: 38,
     height: 38,
-    borderRadius: radius.sm,
+    borderRadius: radius.control,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
@@ -176,7 +180,7 @@ const styles = StyleSheet.create({
   menuIconText: { fontSize: 18 },
   menuText: { flex: 1 },
   menuLabel: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
-  menuSub: { fontSize: 12, color: colors.textMuted },
+  menuSub: { fontSize: 12, color: c.textMuted },
   menuChevron: { fontSize: 22, marginLeft: 8 },
 
   signOutBtn: {
@@ -184,7 +188,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
     borderColor: 'rgba(255,255,255,0.5)',
     borderWidth: 1,
-    borderRadius: radius.md,
+    borderRadius: radius.control,
     paddingVertical: 10,
     paddingHorizontal: 28,
   },
@@ -198,7 +202,7 @@ const styles = StyleSheet.create({
   footer: {
     textAlign: 'center',
     fontSize: 12,
-    color: colors.textMuted,
+    color: c.textMuted,
     marginTop: 32,
   },
-});
+}));

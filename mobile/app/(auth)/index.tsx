@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
@@ -12,10 +11,12 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
-import { colors, shadow, radius } from '@/lib/theme';
+import { font, radius, themedStyles, useTheme } from '@/lib/theme';
 import { PressableScale } from '@/components/PressableScale';
 
 export default function PhoneScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -68,7 +69,7 @@ export default function PhoneScreen() {
           disabled={loading}
         >
           {loading
-            ? <ActivityIndicator color="#fff" />
+            ? <ActivityIndicator color={colors.onBrand} />
             : <Text style={styles.buttonText}>Send Code</Text>}
         </PressableScale>
       </View>
@@ -76,8 +77,8 @@ export default function PhoneScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.primary },
+const useStyles = themedStyles((c, sh) => ({
+  root: { flex: 1, backgroundColor: c.field },
 
   hero: {
     flex: 1,
@@ -88,47 +89,46 @@ const styles = StyleSheet.create({
   logoMark: {
     width: 64,
     height: 64,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
   },
-  logoMarkText: { fontSize: 32, fontWeight: '800', color: '#fff' },
-  logoText: { fontSize: 34, fontWeight: '800', color: '#fff', letterSpacing: -0.5 },
+  logoMarkText: { fontSize: 32, fontFamily: font.heading, color: '#fff' },
+  logoText: { fontSize: 34, fontFamily: font.heading, color: '#fff', letterSpacing: -0.5 },
   tagline: { fontSize: 15, color: 'rgba(255,255,255,0.75)', marginTop: 6 },
 
   card: {
-    backgroundColor: colors.card,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    backgroundColor: c.surface,
+    borderTopLeftRadius: radius.sheet,
+    borderTopRightRadius: radius.sheet,
     padding: 28,
     paddingBottom: 48,
-    ...shadow.md,
+    ...sh.e2,
   },
-  cardTitle: { fontSize: 22, fontWeight: '700', color: colors.text, marginBottom: 4 },
-  cardSub: { fontSize: 14, color: colors.textSecondary, marginBottom: 28 },
+  cardTitle: { fontSize: 22, fontFamily: font.headingBold, color: c.text, marginBottom: 4 },
+  cardSub: { fontSize: 14, color: c.textSecondary, marginBottom: 28 },
 
-  label: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: 8 },
+  label: { fontSize: 13, fontWeight: '600', color: c.textSecondary, marginBottom: 8 },
   input: {
     borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.md,
+    borderColor: c.lineStrong,
+    borderRadius: radius.control,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 17,
-    color: colors.text,
-    backgroundColor: colors.bg,
+    color: c.text,
+    backgroundColor: c.bg,
   },
-  hint: { fontSize: 12, color: colors.textMuted, marginTop: 6, marginBottom: 24 },
+  hint: { fontSize: 12, color: c.textMuted, marginTop: 6, marginBottom: 24 },
 
   button: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
+    backgroundColor: c.brand,
+    borderRadius: radius.control,
     paddingVertical: 16,
     alignItems: 'center',
-    ...shadow.sm,
   },
   buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.2 },
-});
+  buttonText: { color: c.onBrand, fontSize: 16, fontWeight: '700', letterSpacing: 0.2 },
+}));

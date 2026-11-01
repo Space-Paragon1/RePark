@@ -72,11 +72,11 @@ export function AlertsView() {
       <ul className="space-y-4">
         {alerts.data?.map(alert => (
           <li key={alert.id}>
-            <Card className={alert.owner_response ? '' : 'border-amber-200'}>
+            <Card className={alert.owner_response ? '' : 'border-signal/50'}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-lg font-bold">{alert.plate_number}</p>
-                  <p className="text-sm text-ink-secondary">
+                  <p className="text-sm text-text-secondary">
                     {alert.color} {alert.make} {alert.model}
                   </p>
                 </div>
@@ -85,7 +85,7 @@ export function AlertsView() {
                   : <Badge tone="amber">Needs your reply</Badge>}
               </div>
               <p className="mt-3 font-medium">{issueLabel(alert.issue_type)}</p>
-              <p className="text-sm text-ink-muted">Reported {formatDateTime(alert.reported_at)}</p>
+              <p className="text-sm text-text-muted">Reported {formatDateTime(alert.reported_at)}</p>
 
               {!alert.owner_response && (
                 <div className="mt-4 flex flex-wrap gap-2 border-t border-line pt-4">
