@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ButtonLink, Logo } from '@/components/ui';
+import { CheckIcon } from '@/components/icons';
 
 const STEPS = [
   {
@@ -48,17 +49,18 @@ export default function HomePage() {
           <h1 className="max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
             Someone blocking you in? Ask them to move — without swapping numbers.
           </h1>
-          <p className="mt-5 max-w-2xl text-lg text-blue-100">
+          <p className="mt-5 max-w-2xl text-lg text-blue-50">
             RePark sends the vehicle owner an anonymous alert so they can come and repark their car.
             Your identity and theirs stay private.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          {/* Full-width and stacked on phones, side by side from tablet size up */}
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <ButtonLink href="/report" variant="secondary" className="px-6 py-3 text-base">
               Notify a car owner
             </ButtonLink>
             <Link
               href="/vehicles"
-              className="inline-flex items-center rounded-lg border border-white/40 px-6 py-3 text-base font-semibold hover:bg-white/10"
+              className="inline-flex items-center justify-center rounded-lg border border-white/40 px-6 py-3 text-base font-semibold hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               Register my car
             </Link>
@@ -95,7 +97,7 @@ export default function HomePage() {
           <ul className="space-y-3">
             {PRIVACY_POINTS.map(point => (
               <li key={point} className="flex gap-3">
-                <span aria-hidden className="mt-0.5 text-success">✓</span>
+                <CheckIcon className="mt-0.5 size-5 shrink-0 text-success" />
                 <span>{point}</span>
               </li>
             ))}

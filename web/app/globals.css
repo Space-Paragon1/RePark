@@ -18,7 +18,8 @@
   --color-line: #e2e8f0;
   --color-ink: #0f172a;
   --color-ink-secondary: #475569;
-  --color-ink-muted: #94a3b8;
+  /* Darker than the app's #94a3b8 so small grey text meets the 4.5:1 contrast minimum */
+  --color-ink-muted: #64748b;
 
   --font-sans: var(--font-geist-sans);
 }

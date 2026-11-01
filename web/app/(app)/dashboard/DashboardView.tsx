@@ -5,6 +5,7 @@ import { alertsApi, reportsApi, vehiclesApi } from '@/lib/api';
 import { formatDateTime, issueLabel, reportStatus } from '@/lib/labels';
 import { useLoad } from '@/lib/useLoad';
 import { Badge, ButtonLink, Card, ErrorBanner, PageHeader, Spinner } from '@/components/ui';
+import { ArrowRightIcon } from '@/components/icons';
 
 async function loadDashboard() {
   const [vehicles, alerts, reports] = await Promise.all([
@@ -45,7 +46,7 @@ export function DashboardView() {
             </span>
             <span className="text-sm text-ink-secondary">Let the reporter know if you’re moving it.</span>
           </span>
-          <span aria-hidden className="text-warning">→</span>
+          <ArrowRightIcon className="size-5 shrink-0 text-warning" />
         </Link>
       )}
 
