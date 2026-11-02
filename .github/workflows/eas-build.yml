@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    # Only build the app when its code changes. Website, backend and docs
+    # changes don't need a new APK, and each build uses EAS build credit.
+    paths:
+      - 'mobile/**'
   # iPhone builds are started by hand from the Actions tab, because each one
   # uses EAS build credit and needs Apple signing set up first.
   workflow_dispatch:
