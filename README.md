@@ -10,6 +10,25 @@ Available as an Android app, a website (for people who don't want to install an 
 
 ---
 
+## Screenshots
+
+Screenshots use sample data.
+
+### Website
+
+![Home page: enter the plate that's blocking you](docs/screenshots/web-home.png)
+
+![Dashboard: an alert waiting for a reply, a report in progress, and registered vehicles](docs/screenshots/web-dashboard.png)
+
+<p>
+  <img src="docs/screenshots/web-report-phone.png" width="200" alt="Report a car on a phone">
+  <img src="docs/screenshots/web-report-sent-phone.png" width="200" alt="Report sent: the owner has been alerted">
+  <img src="docs/screenshots/web-alert-phone.png" width="200" alt="Owner's alert with Moving now and Already moved">
+  <img src="docs/screenshots/web-dashboard-phone-dark.png" width="200" alt="Dashboard in dark mode">
+</p>
+
+---
+
 ## What's Built (MVP 1.0)
 
 ### Website (`web/`)
@@ -121,7 +140,9 @@ RePark/
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml                # Backend tests + website lint/build on every push
-│       └── eas-build.yml         # Android APK on push to main; iPhone build started by hand
+│       └── eas-build.yml         # Android APK when mobile/ changes on main; iPhone build started by hand
+│
+├── docs/screenshots/             # Screenshots used in this README
 │
 ├── web/                          # Next.js website (see web/README.md)
 │   ├── app/
@@ -259,7 +280,7 @@ Tests mock the database and don't need a `.env` file.
 
 Every push and pull request runs the backend tests and checks that the website type-checks, lints, and builds (`.github/workflows/ci.yml`).
 
-Every push to `main` also triggers an Android APK build via GitHub Actions + EAS Build.
+A push to `main` that changes the app (`mobile/`) also triggers an Android APK build via GitHub Actions + EAS Build. Website, backend and docs changes don't, so they don't use build credit. To build anyway, go to GitHub → **Actions** → **EAS Build** → **Run workflow** → `android`.
 
 iPhone builds don't run on push, because each one uses EAS build credit. Start one by hand from GitHub → **Actions** → **EAS Build** → **Run workflow** → `ios`. It builds the `production` profile and sends it to TestFlight. It only works after the first iPhone build has been run from a terminal (see Running Locally).
 
