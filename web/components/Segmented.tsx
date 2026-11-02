@@ -17,7 +17,7 @@ export function Segmented<T extends string>({ name, label, options, value, onCha
           return (
             <label
               key={option.value}
-              className={`flex h-10 flex-1 cursor-pointer items-center justify-center rounded-[7px] px-2 text-center text-sm transition-colors duration-200 ease-ui has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand ${
+              className={`flex h-10 flex-1 cursor-pointer items-center justify-center whitespace-nowrap rounded-[7px] px-1.5 text-center text-[13px] sm:px-2 sm:text-sm transition-colors duration-200 ease-ui has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand ${
                 selected ? 'bg-surface font-bold text-text shadow-[0_1px_2px_rgba(13,17,23,0.1)]' : 'font-semibold text-text-secondary hover:text-text'
               }`}
             >

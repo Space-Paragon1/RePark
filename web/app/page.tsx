@@ -68,7 +68,7 @@ export default function HomePage() {
           </nav>
           <div className="ml-auto flex items-center gap-2">
             <ButtonLink href="/login" variant="quiet" className="h-10 px-3.5">Sign in</ButtonLink>
-            <ButtonLink href="#get-the-app" variant="secondary" className="hidden h-10 px-4 sm:inline-flex">Get the app</ButtonLink>
+            <ButtonLink href="#get-the-app" variant="secondary" className="h-10 px-4 max-sm:hidden">Get the app</ButtonLink>
           </div>
         </div>
       </header>
