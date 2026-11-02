@@ -15,26 +15,37 @@ log = logging.getLogger(__name__)
 EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send"
 TWILIO_URL = "https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json"
 
-ISSUE_LABELS = {
-    "blocking_driveway":   "Blocking driveway / access",
-    "construction_access": "Construction access blocked",
-    "garbage_pickup":      "Garbage pickup obstruction",
-    "restricted_zone":     "Restricted parking zone",
-    "emergency_access":    "Emergency access blocked",
+# Wording follows the design handoff's copy deck (design_handoff_repark_redesign/copy.md).
+
+# Lower-case issue forms for sentences: "8KTR214, your silver Toyota Corolla, is blocking a driveway or access."
+ISSUE_PHRASES = {
+    "blocking_driveway":   "blocking a driveway or access",
+    "construction_access": "blocking construction access",
+    "garbage_pickup":      "blocking garbage pickup",
+    "restricted_zone":     "parked in a restricted zone",
+    "emergency_access":    "blocking emergency access",
 }
 
+# The app registers this notification category with Moving now / Already moved buttons.
+# Incorrect report is deliberately not offered from a notification.
+ALERT_CATEGORY = "alert"
+
+# Pushes to the reporter, as (title, body). The copy deck adds "at {time}"; it's left out
+# because the server doesn't know the reporter's time zone, and the push arrives right away.
 RESPONSE_MESSAGES = {
-    "moving_now":       "The owner of {plate} is moving their vehicle now.",
-    "already_moved":    "The owner of {plate} says the vehicle has already moved.",
-    "incorrect_report": "The owner of {plate} says this report was incorrect.",
-    "abuse_reported":   "The owner of {plate} says this report was incorrect.",
+    "moving_now":       ("The owner is moving their car.", "{plate} · replied Moving now."),
+    "already_moved":    ("The owner says the car has moved.", "{plate} · replied Already moved."),
+    "incorrect_report": ("The owner marked your report as incorrect.",
+                         "{plate} · if the car is still there, check the plate and report it again."),
+    "abuse_reported":   ("The owner marked your report as incorrect.",
+                         "{plate} · if the car is still there, check the plate and report it again."),
 }
 
 
 # ─── Channels ─────────────────────────────────────────────────────────────────
 
 async def send_push(
-    tokens: list[str], title: str, body: str, data: dict | None = None,
+    tokens: list[str], title: str, body: str, data: dict | None = None, category: str | None = None,
 ) -> tuple[list[str], list[str]]:
     """Send one push per token. Returns (accepted_tokens, dead_tokens).
 
@@ -46,6 +57,7 @@ async def send_push(
 
     messages = [
         {"to": t, "title": title, "body": body, "data": data or {}, "sound": "default"}
+        | ({"categoryId": category} if category else {})
         for t in tokens
     ]
     try:
@@ -122,10 +134,12 @@ async def get_user_phone(user_id: str) -> str | None:
     return phone if phone.startswith("+") else f"+{phone}"
 
 
-async def push_to_user(user_id: str, title: str, body: str, data: dict | None = None) -> bool:
+async def push_to_user(
+    user_id: str, title: str, body: str, data: dict | None = None, category: str | None = None,
+) -> bool:
     """Push to all of a user's devices, dropping dead tokens. True if any accepted."""
     rows = await db_query("push_tokens", {"user_id": f"eq.{user_id}"})
-    accepted, dead = await send_push([r["token"] for r in rows], title, body, data)
+    accepted, dead = await send_push([r["token"] for r in rows], title, body, data, category)
     for token in dead:
         await db_delete("push_tokens", {"user_id": user_id, "token": token})
     return bool(accepted)
@@ -144,28 +158,43 @@ async def open_alert(report_id: str, vehicle_id: str) -> dict:
     return alert
 
 
+def describe_car(vehicle: dict | None) -> str | None:
+    """'silver Toyota Corolla', or None without vehicle details."""
+    if not vehicle:
+        return None
+    parts = [(vehicle.get("color") or "").strip().lower(), vehicle.get("make") or "", vehicle.get("model") or ""]
+    car = " ".join(p.strip() for p in parts if p and p.strip())
+    return car or None
+
+
 async def deliver_alert(
     alert_id: str, owner_user_id: str, plate: str, issue_type: str, report_id: str,
+    vehicle: dict | None = None,
 ) -> None:
     """Tell the owner about a report: push first, SMS if no push was accepted.
+    `vehicle` (colour, make, model) makes the wording name the car.
     Records the outcome on the alert. Runs as a background task."""
     try:
-        label = ISSUE_LABELS.get(issue_type, issue_type)
+        phrase = ISSUE_PHRASES.get(issue_type, issue_type.replace("_", " "))
+        car = describe_car(vehicle)
         channel = None
 
         if await push_to_user(
             owner_user_id,
-            title=f"⚠️ Alert for {plate}",
-            body=label,
+            title="Someone's blocked in by your car.",
+            body=(f"{plate}, your {car}, is {phrase}." if car else f"{plate} is {phrase}.")
+            + " Let them know what's happening.",
             data={"type": "alert", "report_id": report_id, "alert_id": alert_id},
+            category=ALERT_CATEGORY,
         ):
             channel = "push"
         else:
             phone = await get_user_phone(owner_user_id)
+            link = f"{settings.site_url.rstrip('/')}/alerts"
             if phone and await send_sms(
                 phone,
-                f"RePark: your vehicle {plate} was reported ({label}). "
-                "Open the RePark app to respond.",
+                f"RePark: Someone's blocked in by your {car or 'car'}, {plate}. "
+                f"Let them know what's happening at {link}. They won't see who you are.",
             ):
                 channel = "sms"
 
@@ -180,10 +209,11 @@ async def deliver_alert(
 async def notify_reporter(reporter_user_id: str, plate: str, response: str, report_id: str) -> None:
     """Push the owner's response to the reporter. Push only, no SMS. Runs as a background task."""
     try:
+        title, body = RESPONSE_MESSAGES.get(response, ("The owner replied to your report.", "{plate}"))
         await push_to_user(
             reporter_user_id,
-            title=f"Update on {plate}",
-            body=RESPONSE_MESSAGES.get(response, "The owner has responded to your report.").format(plate=plate),
+            title=title,
+            body=body.format(plate=plate),
             data={"type": "report_update", "report_id": report_id},
         )
     except Exception:

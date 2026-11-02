@@ -292,6 +292,7 @@ Set the following environment variables in Railway → Variables:
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
 | `SUPABASE_JWT_SECRET` | Supabase JWT secret |
 | `CORS_ORIGINS` | Website URL(s) allowed to call the API, comma-separated, e.g. `https://repark.vercel.app`. Defaults to any site |
+| `SITE_URL` | The website, for the link in alert text messages (`{SITE_URL}/alerts`). Defaults to `https://re-park.vercel.app` |
 | `TWILIO_ACCOUNT_SID` | Twilio account SID (SMS fallback, optional) |
 | `TWILIO_AUTH_TOKEN` | Twilio auth token (SMS fallback, optional) |
 | `TWILIO_MESSAGING_SERVICE_SID` | Twilio Messaging Service to send from. Set this **or** `TWILIO_FROM_NUMBER` |
@@ -301,6 +302,8 @@ Without the Twilio variables, alerts go out by push only. Failures are logged an
 
 ### Website (Vercel)
 Import the repo in Vercel, set **Root Directory** to `web`, and add `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `NEXT_PUBLIC_API_URL`. After the first deploy, add the site's URL to `CORS_ORIGINS` on Railway.
+
+Optional: `NEXT_PUBLIC_SUPPORT_EMAIL` turns on the Contact form (it opens the visitor's email app addressed to it), `NEXT_PUBLIC_SITE_URL` sets the address used in share-image links, and `NEXT_PUBLIC_ANDROID_APP_URL` / `NEXT_PUBLIC_IOS_APP_URL` show store buttons on the home page.
 
 **Deploy order:** run any new database migration *before* deploying backend code that depends on it.
 

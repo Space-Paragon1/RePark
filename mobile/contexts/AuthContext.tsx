@@ -29,7 +29,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        registerForPushNotifications()
+        // Only if allowed already; the primer asks after the first sign-in.
+        registerForPushNotifications({ ask: false })
           .then(token => { if (token) pushTokensApi.register(token).catch(() => {}); })
           .catch(() => {});
       }

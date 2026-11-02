@@ -1,134 +1,80 @@
 import { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
-import { font, radius, themedStyles, useTheme } from '@/lib/theme';
-import { PressableScale } from '@/components/PressableScale';
+import { sendCodeErrorMessage } from '@/lib/authErrors';
+import { defaultCountry, toE164, type Country } from '@/lib/phone';
+import { openSitePage } from '@/lib/site';
+import { font, themedStyles } from '@/lib/theme';
+import { Banner } from '@/components/Banner';
+import { Button } from '@/components/Button';
+import { Mark } from '@/components/Mark';
+import { PhoneField } from '@/components/PhoneCodeFields';
 
+/** Sign-in, step 1: the phone number. Send code enables at a valid length. */
 export default function PhoneScreen() {
-  const styles = useStyles();
-  const { colors } = useTheme();
-  const [phone, setPhone] = useState('');
-  const [loading, setLoading] = useState(false);
+  const s = useStyles();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const [country, setCountry] = useState<Country>(() => defaultCountry(Intl.DateTimeFormat().resolvedOptions().locale));
+  const [national, setNational] = useState('');
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const e164 = toE164(country, national);
 
-  const handleSendOTP = async () => {
-    const trimmed = phone.trim();
-    if (!trimmed || !trimmed.startsWith('+')) {
-      Alert.alert('Invalid number', 'Enter your phone number in international format, e.g. +1234567890');
+  const send = async () => {
+    if (!e164) return;
+    setSending(true);
+    setError(null);
+    const { error } = await supabase.auth.signInWithOtp({ phone: e164 });
+    setSending(false);
+    if (error) {
+      setError(sendCodeErrorMessage(error));
       return;
     }
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({ phone: trimmed });
-    setLoading(false);
-    if (error) { Alert.alert('Error', error.message); return; }
-    router.push({ pathname: '/(auth)/verify', params: { phone: trimmed } });
+    router.push({ pathname: '/(auth)/verify', params: { phone: e164, country: country.code } });
   };
 
   return (
-    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      {/* Hero */}
-      <View style={styles.hero}>
-        <View style={styles.logoMark}>
-          <Text style={styles.logoMarkText}>P</Text>
+    <KeyboardAvoidingView style={s.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView contentContainerStyle={[s.content, { paddingTop: insets.top + 24 }]} keyboardShouldPersistTaps="handled">
+        <Mark size={44} />
+        <Text style={s.title} accessibilityRole="header">What's your phone number?</Text>
+        <Text style={s.body}>We'll text you a 6-digit code. That's the whole sign-in.</Text>
+
+        <View style={s.field}>
+          <PhoneField
+            country={country}
+            onCountryChange={c => { setCountry(c); setError(null); }}
+            value={national}
+            onChangeText={value => { setNational(value); setError(null); }}
+            autoFocus
+            onSubmitEditing={send}
+          />
         </View>
-        <Text style={styles.logoText}>RePark</Text>
-        <Text style={styles.tagline}>Move vehicles. Protect privacy.</Text>
-      </View>
+        {!!error && <Banner tone="error" message={error} style={s.banner} />}
 
-      {/* Form card */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Sign in</Text>
-        <Text style={styles.cardSub}>We'll send a one-time code to your phone.</Text>
-
-        <Text style={styles.label}>Phone number</Text>
-        <TextInput
-          style={styles.input}
-          value={phone}
-          onChangeText={setPhone}
-          placeholder="+1 234 567 8900"
-          placeholderTextColor={colors.textMuted}
-          keyboardType="phone-pad"
-          autoFocus
-          autoCorrect={false}
-        />
-        <Text style={styles.hint}>Include your country code — e.g. +44 or +1</Text>
-
-        <PressableScale
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleSendOTP}
-          disabled={loading}
-        >
-          {loading
-            ? <ActivityIndicator color={colors.onBrand} />
-            : <Text style={styles.buttonText}>Send Code</Text>}
-        </PressableScale>
-      </View>
+        <Button label="Send code" size="main" disabled={!e164} loading={sending} loadingLabel="Sending" onPress={send} style={s.button} />
+        <Text style={s.terms}>
+          By continuing you agree to the{' '}
+          <Text style={s.link} onPress={() => openSitePage('/terms')} accessibilityRole="link">Terms</Text>
+          {' '}and{' '}
+          <Text style={s.link} onPress={() => openSitePage('/privacy')} accessibilityRole="link">Privacy Policy</Text>.
+        </Text>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-const useStyles = themedStyles((c, sh) => ({
-  root: { flex: 1, backgroundColor: c.field },
-
-  hero: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: 24,
-  },
-  logoMark: {
-    width: 64,
-    height: 64,
-    borderRadius: radius.card,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  logoMarkText: { fontSize: 32, fontFamily: font.heading, color: '#fff' },
-  logoText: { fontSize: 34, fontFamily: font.heading, color: '#fff', letterSpacing: -0.5 },
-  tagline: { fontSize: 15, color: 'rgba(255,255,255,0.75)', marginTop: 6 },
-
-  card: {
-    backgroundColor: c.surface,
-    borderTopLeftRadius: radius.sheet,
-    borderTopRightRadius: radius.sheet,
-    padding: 28,
-    paddingBottom: 48,
-    ...sh.e2,
-  },
-  cardTitle: { fontSize: 22, fontFamily: font.headingBold, color: c.text, marginBottom: 4 },
-  cardSub: { fontSize: 14, color: c.textSecondary, marginBottom: 28 },
-
-  label: { fontSize: 13, fontWeight: '600', color: c.textSecondary, marginBottom: 8 },
-  input: {
-    borderWidth: 1.5,
-    borderColor: c.lineStrong,
-    borderRadius: radius.control,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 17,
-    color: c.text,
-    backgroundColor: c.bg,
-  },
-  hint: { fontSize: 12, color: c.textMuted, marginTop: 6, marginBottom: 24 },
-
-  button: {
-    backgroundColor: c.brand,
-    borderRadius: radius.control,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: c.onBrand, fontSize: 16, fontWeight: '700', letterSpacing: 0.2 },
+const useStyles = themedStyles((c) => ({
+  root: { flex: 1, backgroundColor: c.bg },
+  content: { paddingHorizontal: 20, paddingBottom: 32 },
+  title: { fontFamily: font.heading, fontSize: 30, lineHeight: 34, letterSpacing: -0.6, color: c.text, marginTop: 20 },
+  body: { fontSize: 16, lineHeight: 23, color: c.textSecondary, marginTop: 8 },
+  field: { marginTop: 24 },
+  banner: { marginTop: 16 },
+  button: { marginTop: 16 },
+  terms: { fontSize: 13, lineHeight: 19, color: c.textMuted, marginTop: 16 },
+  link: { color: c.brand, fontWeight: '600' },
 }));

@@ -19,6 +19,11 @@ COOLDOWN_MINUTES = 15
 # Keep in sync with close_stale_reports() in database/schema.sql.
 UNREGISTERED_WAIT_HOURS = 2
 
+# Sent as the X-Error-Code header so clients can show the right message.
+REPORTING_PAUSED_CODE = "reporting_paused"
+RATE_LIMITED_CODE = "rate_limited"
+PLATE_COOLDOWN_CODE = "plate_cooldown"
+
 
 def _to_response(record: dict) -> ReportResponse:
     return ReportResponse(**{**record, "owner_notified": bool(record.get("owner_notified"))})
@@ -42,6 +47,7 @@ async def create_report(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Your account has been temporarily restricted due to suspicious activity.",
+            headers={"X-Error-Code": REPORTING_PAUSED_CODE},
         )
 
     # ── Rate limit: max 3 reports per hour ───────────────────────────────────
@@ -59,6 +65,7 @@ async def create_report(
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=f"Maximum {RATE_LIMIT_PER_HOUR} reports per hour. Please try again later.",
+            headers={"X-Error-Code": RATE_LIMITED_CODE},
         )
 
     # ── Cooldown: 1 report per plate per 15 minutes ──────────────────────────
@@ -77,6 +84,7 @@ async def create_report(
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=f"You already reported this plate recently. Please wait {COOLDOWN_MINUTES} minutes.",
+            headers={"X-Error-Code": PLATE_COOLDOWN_CODE},
         )
 
     # ── Create report ─────────────────────────────────────────────────────────
@@ -100,6 +108,7 @@ async def create_report(
         background_tasks.add_task(
             deliver_alert,
             alert["id"], vehicle["user_id"], body.plate_number, body.issue_type.value, report["id"],
+            vehicle=vehicle,
         )
 
     return _to_response(report)

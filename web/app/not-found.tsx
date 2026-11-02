@@ -1,27 +1,31 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { ButtonLink, Card, Logo } from '@/components/ui';
+import { PublicHeader } from '@/components/SiteChrome';
+import { ButtonLink } from '@/components/ui';
 
 export const metadata: Metadata = { title: 'Page not found' };
 
-/** Shown for any address that isn't a page on the site. Styled like the sign-in page. */
+/** Any address that isn't a page: a blank plate reading 404, and the kerb stripe used once. */
 export default function NotFound() {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center bg-field px-5 py-12">
-      <Link href="/" className="mb-8">
-        <Logo light />
-      </Link>
-      <Card className="w-full max-w-md p-7 text-center">
-        <p className="text-sm font-semibold text-brand">404</p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight">Page not found</h1>
-        <p className="mt-2 text-text-secondary">
-          This page doesn’t exist or has moved. Check the address, or head back to RePark.
+    <div className="flex flex-1 flex-col">
+      <PublicHeader />
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-5 py-16 sm:px-10">
+        <span
+          aria-hidden
+          className="grid h-20 w-64 place-items-center rounded-control border-2 border-dashed border-line-strong font-mono text-[40px] font-semibold tracking-[0.12em] text-text-muted"
+        >
+          404
+        </span>
+        <h1 className="mt-6 text-[40px] font-extrabold leading-[44px] tracking-[-0.02em] sm:text-5xl">Nothing parked here.</h1>
+        <p className="mt-4 max-w-lg text-lg leading-7 text-text-secondary">
+          The link may be old, or the address has a typo. If you scanned a sticker, try entering the plate yourself.
         </p>
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <ButtonLink href="/">Go to the home page</ButtonLink>
-          <ButtonLink href="/report" variant="secondary">Report a car</ButtonLink>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <ButtonLink href="/report">Report a car</ButtonLink>
+          <ButtonLink href="/" variant="secondary">Go to the home page</ButtonLink>
         </div>
-      </Card>
-    </main>
+      </main>
+      <div className="kerb-stripe h-2" aria-hidden />
+    </div>
   );
 }

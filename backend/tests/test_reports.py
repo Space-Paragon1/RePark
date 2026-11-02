@@ -19,6 +19,7 @@ async def test_abuse_block(client):
         res = await client.post("/reports", json=REPORT_BODY)
 
     assert res.status_code == 403
+    assert res.headers["X-Error-Code"] == "reporting_paused"
 
 
 async def test_hourly_rate_limit_logs_abuse_event(client):
@@ -32,6 +33,7 @@ async def test_hourly_rate_limit_logs_abuse_event(client):
         res = await client.post("/reports", json=REPORT_BODY)
 
     assert res.status_code == 429
+    assert res.headers["X-Error-Code"] == "rate_limited"
     assert mock_insert.call_args.args[1]["event_type"] == "rate_limit_exceeded"
 
 
@@ -47,6 +49,7 @@ async def test_plate_cooldown(client):
         res = await client.post("/reports", json=REPORT_BODY)
 
     assert res.status_code == 429
+    assert res.headers["X-Error-Code"] == "plate_cooldown"
     assert mock_insert.call_args.args[1]["event_type"] == "cooldown_exceeded"
 
 
@@ -86,6 +89,7 @@ async def test_registered_plate_alerts_owner(client):
     # Delivery runs as a background task for the vehicle's owner
     mock_deliver.assert_awaited_once_with(
         "alert-1", "user-abc123", "ABC123", "blocking_driveway", "report-1",
+        vehicle=FAKE_VEHICLE,
     )
 
 

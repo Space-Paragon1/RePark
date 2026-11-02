@@ -30,6 +30,7 @@
   --color-on-stop: #FFFFFF;
   --color-inverse: #0D1117;
   --color-on-inverse: #ECEEF2;
+  --color-go-on-inverse: #4CC38A;
   --color-field: #0B46C9;
 
   --radius-plate-sm: 4px;
@@ -42,6 +43,40 @@
   --shadow-e2: 0 -8px 32px rgba(13, 17, 23, 0.16);
 
   --ease-ui: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Plate stamp: each new character lands (motion.md) */
+  --animate-stamp: stamp 180ms var(--ease-ui);
+  @keyframes stamp {
+    from { transform: translateY(-3px) scale(1.08); color: var(--color-brand); }
+    to   { transform: none; color: var(--color-text); }
+  }
+}
+
+@keyframes stamp-colour {
+  from { color: var(--color-brand); }
+  to   { color: var(--color-text); }
+}
+
+/* Skeleton shimmer: 1.4 s loop; static under reduced motion. */
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+.skeleton-bone {
+  background: linear-gradient(90deg, var(--color-surface-sunken) 30%, var(--color-line) 50%, var(--color-surface-sunken) 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+/* Relay dot: travels the dashed path once on send (1.2 s, ease-in-out). */
+@keyframes relay-down   { from { top: 0; }  to { top: calc(100% - 12px); } }
+@keyframes relay-across { from { left: 0; } to { left: calc(100% - 12px); } }
+.relay-down   { animation: relay-down 1200ms ease-in-out 1 both; }
+.relay-across { animation: relay-across 1200ms ease-in-out 1 both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-stamp { animation-name: stamp-colour; }
+  /* The dot is shown at its destination instead of travelling. */
+  .relay-down   { animation: none; top: calc(100% - 12px); }
+  .relay-across { animation: none; left: calc(100% - 12px); }
+  .skeleton-bone { animation: none; }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -67,6 +102,7 @@
     --color-on-stop: #0D1117;
     --color-inverse: #ECEEF2;
     --color-on-inverse: #0D1117;
+    --color-go-on-inverse: #0A7A50;
     --color-field: #1A2440;
     --shadow-e1: none;
     --shadow-e2: none;
@@ -89,6 +125,11 @@ body {
 }
 
 .tnum { font-variant-numeric: tabular-nums; }
+
+/* Kerb stripe: Curb Yellow and ink, 12 px each. At most once per screen, 5–8 px tall. */
+.kerb-stripe {
+  background: repeating-linear-gradient(-45deg, #F5B800 0 12px, #0D1117 12px 24px);
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

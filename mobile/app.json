@@ -12,13 +12,19 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "RePark needs your location to verify you are near the vehicle you are reporting.",
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "icon": {
+        "light": "./assets/images/icon.png",
+        "dark": "./assets/images/icon-dark.png",
+        "tinted": "./assets/images/icon-tinted.png"
       }
     },
     "icon": "./assets/images/icon.png",
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#2563EB"
+        "foregroundImage": "./assets/images/adaptive-foreground.png",
+        "backgroundImage": "./assets/images/adaptive-background.png",
+        "monochromeImage": "./assets/images/adaptive-monochrome.png"
       },
       "package": "com.repark.app",
       "permissions": [
@@ -43,9 +49,21 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/icon.png",
-          "color": "#2563EB",
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#0B46C9",
           "sounds": []
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 160,
+          "backgroundColor": "#F7F6F2",
+          "dark": {
+            "image": "./assets/images/splash-icon.png",
+            "backgroundColor": "#0D1117"
+          }
         }
       ]
     ],

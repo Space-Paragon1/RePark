@@ -1,11 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { sendCodeErrorMessage, verifyCodeErrorMessage } from '@/lib/authErrors';
+import { formatPlateInput } from '@/lib/plate';
+import { defaultCountry, maskPhone, toE164, type Country } from '@/lib/phone';
 import { useAuth } from '@/components/AuthProvider';
-import { Button, ErrorBanner, Field, inputClass } from '@/components/ui';
+import { CodeField, PhoneField } from '@/components/PhoneCodeFields';
+import { Plate } from '@/components/Plate';
+import { Banner, Button, Logo } from '@/components/ui';
 
 // Supabase allows one code per number every 60 seconds.
 const RESEND_WAIT_SECONDS = 60;
@@ -15,36 +20,47 @@ function safeNext(next: string | null): string {
   return next && next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard';
 }
 
-/** Why the visitor is being asked to sign in, based on where they're headed. */
-function signInReason(next: string): React.ReactNode {
+/** The plate being reported, when sign-in came from the home page or a sticker. */
+function plateFromNext(next: string): string | null {
   const url = new URL(next, 'https://repark.invalid');
-  switch (url.pathname) {
-    case '/report': {
-      // Set by links such as QR stickers: /report?plate=ABC123
-      const plate = url.searchParams.get('plate')?.trim().toUpperCase().slice(0, 12);
-      return plate
-        ? <>Sign in to alert the owner of <strong className="font-semibold">{plate}</strong>.</>
-        : 'Sign in to report a car that’s blocking you.';
-    }
+  if (url.pathname !== '/report') return null;
+  const plate = url.searchParams.get('plate');
+  return plate ? formatPlateInput(plate).replace(/\s/g, '') || null : null;
+}
+
+/** Why the visitor is being asked to sign in, for destinations other than a report. */
+function signInReason(next: string): string {
+  switch (new URL(next, 'https://repark.invalid').pathname) {
+    case '/report':   return 'Sign in to report a car that’s blocking you.';
     case '/vehicles': return 'Sign in to register your car.';
     case '/alerts':   return 'Sign in to see alerts about your car.';
-    default:          return null;
+    default:          return 'One phone number. No password, photo or username.';
   }
 }
 
+function formatCountdown(seconds: number): string {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
+/** Sign-in (screens.md): a split card, phone step then code step. */
 export function LoginForm() {
   const router = useRouter();
   const next = safeNext(useSearchParams().get('next'));
-  const reason = signInReason(next);
+  const plate = plateFromNext(next);
   const { session, loading } = useAuth();
 
   const [step, setStep] = useState<'phone' | 'code'>('phone');
-  const [phone, setPhone] = useState('');
+  const [country, setCountry] = useState<Country>(() =>
+    defaultCountry(typeof navigator !== 'undefined' ? navigator.language : undefined),
+  );
+  const [national, setNational] = useState('');
+  const [phone, setPhone] = useState(''); // E.164, once a code was sent
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState<'send' | 'verify' | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [resendIn, setResendIn] = useState(0);
+
+  const e164 = toE164(country, national);
 
   // Already signed in (or just finished signing in): go on.
   useEffect(() => {
@@ -62,7 +78,6 @@ export function LoginForm() {
   const requestCode = async (number: string) => {
     setBusy('send');
     setError(null);
-    setNotice(null);
     const { error } = await supabase().auth.signInWithOtp({ phone: number });
     setBusy(null);
     if (error) {
@@ -75,115 +90,118 @@ export function LoginForm() {
 
   const sendCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    const normalised = phone.replace(/[\s()-]/g, '');
-    if (!/^\+\d{7,15}$/.test(normalised)) {
-      setError('Enter your number in international format, starting with + and your country code, e.g. +1 234 567 8900.');
+    if (!e164) {
+      setError('That number looks too short. Check it and try again.');
       return;
     }
-    if (await requestCode(normalised)) {
-      setPhone(normalised);
+    if (await requestCode(e164)) {
+      setPhone(e164);
       setStep('code');
     }
   };
 
-  const resendCode = async () => {
-    setCode('');
-    if (await requestCode(phone)) setNotice(`We sent a new code to ${phone}.`);
-  };
-
-  const verifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const verify = async (token: string) => {
     setBusy('verify');
     setError(null);
-    setNotice(null);
-    const { error } = await supabase().auth.verifyOtp({ phone, token: code.trim(), type: 'sms' });
+    const { error } = await supabase().auth.verifyOtp({ phone, token, type: 'sms' });
     setBusy(null);
-    if (error) {
-      setError(verifyCodeErrorMessage(error));
-      return;
-    }
-    // The session change triggers the redirect above.
+    if (error) setError(verifyCodeErrorMessage(error));
+    // On success the session change triggers the redirect above.
+  };
+
+  const changeCode = (value: string) => {
+    setCode(value);
+    if (error) setError(null);
+    // Paste or autofill fills all six; send straight away.
+    if (value.length === 6 && busy === null) verify(value);
   };
 
   const changeNumber = () => {
     setStep('phone');
     setCode('');
     setError(null);
-    setNotice(null);
     setResendIn(0);
   };
 
-  if (step === 'phone') {
-    return (
-      <form onSubmit={sendCode} className="space-y-5">
-        {reason && (
-          <p className="rounded-lg bg-brand-tint px-4 py-3 text-sm text-brand">{reason}</p>
-        )}
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Sign in</h1>
-          <p className="mt-1 text-text-secondary">We’ll text you a one-time code. No password needed.</p>
-        </div>
-        <ErrorBanner message={error} />
-        <Field label="Phone number" hint="Include your country code, e.g. +44 or +1">
-          <input
-            className={inputClass}
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            placeholder="+1 234 567 8900"
-            value={phone}
-            onChange={e => setPhone(e.target.value)}
-            autoFocus
-            required
-          />
-        </Field>
-        <Button type="submit" loading={busy === 'send'} className="w-full">Send code</Button>
-      </form>
-    );
-  }
-
   return (
-    <form onSubmit={verifyCode} className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Enter your code</h1>
-        <p className="mt-1 text-text-secondary">We sent a 6-digit code to {phone}.</p>
+    <div className="grid w-full max-w-4xl overflow-hidden bg-surface sm:rounded-card sm:border sm:border-line md:grid-cols-[300px_minmax(0,1fr)]">
+      {/* Field-colour panel: the plate being reported, when there is one */}
+      <div className="relative flex flex-col gap-6 bg-field px-6 pb-8 pt-6 text-white md:min-h-[520px] md:px-7">
+        <Link href="/" aria-label="RePark home" className="w-fit">
+          <Logo light />
+        </Link>
+        <div className="mt-auto">
+          {plate ? (
+            <>
+              <p className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-white/80">Sign in to alert the owner of</p>
+              <Plate plate={plate} size="M" className="mt-3 w-fit" />
+              <p className="mt-4 text-sm text-white/85">We’ll bring you straight back to your report.</p>
+            </>
+          ) : (
+            <p className="text-sm text-white/85">{signInReason(next)}</p>
+          )}
+        </div>
+        <div className="kerb-stripe absolute inset-x-0 bottom-0 h-2" aria-hidden />
       </div>
-      <ErrorBanner message={error} />
-      {notice && (
-        <p role="status" className="rounded-lg border border-go/30 bg-go-tint px-4 py-3 text-sm text-go">
-          {notice}
-        </p>
-      )}
-      <Field label="Code">
-        <input
-          className={`${inputClass} tracking-[0.4em]`}
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          pattern="\d{6}"
-          maxLength={6}
-          placeholder="123456"
-          value={code}
-          onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
-          autoFocus
-          required
-        />
-      </Field>
-      <Button type="submit" loading={busy === 'verify'} disabled={busy !== null} className="w-full">
-        Verify and sign in
-      </Button>
-      <div className="flex flex-col items-center gap-3 text-sm font-medium">
-        <button
-          type="button"
-          className="text-brand hover:underline disabled:cursor-not-allowed disabled:text-text-muted disabled:no-underline"
-          onClick={resendCode}
-          disabled={busy !== null || resendIn > 0}
-        >
-          {resendIn > 0 ? `Didn’t get it? Send a new code in ${resendIn}s` : 'Didn’t get it? Send a new code'}
-        </button>
-        <button type="button" className="text-text-secondary hover:underline" onClick={changeNumber}>
-          Use a different number
-        </button>
+
+      <div className="px-6 py-8 sm:px-10 sm:py-12">
+        {step === 'phone' ? (
+          <form onSubmit={sendCode} className="max-w-md" noValidate>
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-text-muted">Step 1 of 2</p>
+            <h1 className="mt-2 text-[30px] font-extrabold leading-tight tracking-[-0.02em]">What’s your phone number?</h1>
+            <p className="mt-2 text-text-secondary">We’ll text you a 6-digit code. No password needed.</p>
+            <label htmlFor="phone" className="mb-1.5 mt-7 block text-sm font-semibold">Phone number</label>
+            <PhoneField
+              id="phone"
+              country={country}
+              onCountryChange={c => { setCountry(c); setError(null); }}
+              value={national}
+              onChange={value => { setNational(value); setError(null); }}
+              autoFocus
+            />
+            {error && <Banner tone="error" className="mt-4">{error}</Banner>}
+            <Button type="submit" loading={busy === 'send'} loadingLabel="Sending" disabled={!e164} className="mt-5">
+              Send code
+            </Button>
+            <p className="mt-5 text-[13px] text-text-muted">
+              By continuing you agree to the{' '}
+              <Link href="/terms" className="font-semibold text-brand hover:underline">Terms</Link> and{' '}
+              <Link href="/privacy" className="font-semibold text-brand hover:underline">Privacy Policy</Link>.
+            </p>
+          </form>
+        ) : (
+          <div className="max-w-md">
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-text-muted">Step 2 of 2</p>
+            <h1 className="mt-2 text-[30px] font-extrabold leading-tight tracking-[-0.02em]">Enter the code</h1>
+            <p className="mt-2 text-text-secondary">
+              Sent to {maskPhone(phone, country)}.{resendIn <= 0 && ' You can ask for a new one now.'}
+            </p>
+            <div className="mt-7">
+              <CodeField value={code} onChange={changeCode} error={error} disabled={busy === 'verify'} />
+            </div>
+            {busy === 'verify' && (
+              <Button loading loadingLabel="Signing in" className="mt-5">Signing in</Button>
+            )}
+            <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-semibold">
+              {resendIn > 0 ? (
+                <span className="font-mono text-xs font-medium text-text-muted">Resend in {formatCountdown(resendIn)}</span>
+              ) : (
+                <button
+                  type="button"
+                  className="text-brand hover:underline disabled:opacity-45"
+                  disabled={busy !== null}
+                  onClick={async () => { setCode(''); await requestCode(phone); }}
+                >
+                  Resend code
+                </button>
+              )}
+              <button type="button" className="text-brand hover:underline" onClick={changeNumber}>
+                Use a different number
+              </button>
+            </div>
+          </div>
+        )}
       </div>
-    </form>
+    </div>
   );
 }

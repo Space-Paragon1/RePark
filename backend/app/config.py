@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     # The mobile app isn't a browser, so it's unaffected.
     cors_origins: str = "*"
 
+    # The website, for links in text messages (e.g. "{site_url}/alerts").
+    site_url: str = "https://re-park.vercel.app"
+
     # SMS fallback. Leave unset to send push only.
     # Set either a Messaging Service SID or a From number.
     twilio_account_sid: str | None = None

@@ -98,7 +98,7 @@ export type Report = {
   id: string;
   plate_number: string;
   issue_type: IssueType;
-  status: string;
+  status: 'submitted' | 'notified' | 'responded' | 'closed' | 'rejected';
   owner_notified: boolean;
   created_at: string;
 };

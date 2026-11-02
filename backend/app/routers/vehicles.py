@@ -93,6 +93,7 @@ async def register_vehicle(
         alert = await open_alert(report["id"], record["id"])
         background_tasks.add_task(
             deliver_alert, alert["id"], user_id, body.plate_number, report["issue_type"], report["id"],
+            vehicle=record,
         )
 
     return VehicleResponse(**record)

@@ -64,14 +64,18 @@ async def test_push_to_user_removes_dead_tokens():
 
 # ─── deliver_alert ────────────────────────────────────────────────────────────
 
-async def _deliver(push_ok: bool, phone: str | None, sms_ok: bool):
+VEHICLE = {"color": "Silver", "make": "Toyota", "model": "Corolla"}
+
+
+async def _deliver(push_ok: bool, phone: str | None, sms_ok: bool, vehicle: dict | None = VEHICLE):
     with (
-        patch("app.services.notify.push_to_user", new_callable=AsyncMock, return_value=push_ok),
+        patch("app.services.notify.push_to_user", new_callable=AsyncMock, return_value=push_ok) as mock_push,
         patch("app.services.notify.get_user_phone", new_callable=AsyncMock, return_value=phone),
         patch("app.services.notify.send_sms", new_callable=AsyncMock, return_value=sms_ok) as mock_sms,
         patch("app.services.notify.db_update", new_callable=AsyncMock) as mock_update,
     ):
-        await notify.deliver_alert("alert-1", "owner-1", "ABC123", "blocking_driveway", "report-1")
+        await notify.deliver_alert("alert-1", "owner-1", "ABC123", "blocking_driveway", "report-1", vehicle=vehicle)
+    _deliver.last_push = mock_push
     return mock_sms, mock_update.call_args.args[2]
 
 
@@ -81,11 +85,32 @@ async def test_deliver_by_push_skips_sms():
     assert update == {"delivery_status": "sent", "delivery_channel": "push"}
 
 
+async def test_deliver_push_wording_names_the_car():
+    await _deliver(push_ok=True, phone=None, sms_ok=False)
+    kwargs = _deliver.last_push.call_args.kwargs
+    assert kwargs["title"] == "Someone's blocked in by your car."
+    assert kwargs["body"] == (
+        "ABC123, your silver Toyota Corolla, is blocking a driveway or access. Let them know what's happening."
+    )
+    assert kwargs["category"] == "alert"
+    assert kwargs["data"]["alert_id"] == "alert-1"
+
+
+async def test_deliver_push_wording_without_vehicle():
+    await _deliver(push_ok=True, phone=None, sms_ok=False, vehicle=None)
+    assert _deliver.last_push.call_args.kwargs["body"] == (
+        "ABC123 is blocking a driveway or access. Let them know what's happening."
+    )
+
+
 async def test_deliver_falls_back_to_sms():
     mock_sms, update = await _deliver(push_ok=False, phone="+15550000000", sms_ok=True)
     to, body = mock_sms.call_args.args
     assert to == "+15550000000"
-    assert "ABC123" in body and "Blocking driveway" in body
+    assert body == (
+        "RePark: Someone's blocked in by your silver Toyota Corolla, ABC123. "
+        "Let them know what's happening at https://re-park.vercel.app/alerts. They won't see who you are."
+    )
     assert update == {"delivery_status": "sent", "delivery_channel": "sms"}
 
 
@@ -159,6 +184,6 @@ async def test_notify_reporter_pushes_response():
         await notify.notify_reporter("reporter-1", "ABC123", "moving_now", "report-1")
 
     user_id = mock_push.call_args.args[0]
-    body = mock_push.call_args.kwargs["body"]
     assert user_id == "reporter-1"
-    assert body == "The owner of ABC123 is moving their vehicle now."
+    assert mock_push.call_args.kwargs["title"] == "The owner is moving their car."
+    assert mock_push.call_args.kwargs["body"] == "ABC123 · replied Moving now."

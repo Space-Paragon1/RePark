@@ -1,155 +1,113 @@
-import { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { useEffect, useState } from 'react';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
-import { font, radius, themedStyles, useTheme } from '@/lib/theme';
-import { PressableScale } from '@/components/PressableScale';
+import { sendCodeErrorMessage, verifyCodeErrorMessage } from '@/lib/authErrors';
+import { COUNTRIES, maskPhone } from '@/lib/phone';
+import { font, themedStyles, useTheme } from '@/lib/theme';
+import { Banner } from '@/components/Banner';
+import { Button } from '@/components/Button';
+import { CodeField } from '@/components/PhoneCodeFields';
+import { BackIcon } from '@/components/icons';
 
+// Supabase allows one code per number every 60 seconds.
+const RESEND_WAIT_SECONDS = 60;
+
+function formatCountdown(seconds: number): string {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
+/** Sign-in, step 2: the 6-digit code. Autofill or paste fills all six and submits. */
 export default function VerifyScreen() {
-  const styles = useStyles();
+  const s = useStyles();
   const { colors } = useTheme();
-  const { phone } = useLocalSearchParams<{ phone: string }>();
-  const [otp, setOtp] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [resending, setResending] = useState(false);
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { phone, country } = useLocalSearchParams<{ phone: string; country?: string }>();
+  const [code, setCode] = useState('');
+  const [verifying, setVerifying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [resendIn, setResendIn] = useState(RESEND_WAIT_SECONDS);
 
-  const handleVerify = async () => {
-    if (otp.length !== 6) {
-      Alert.alert('Invalid code', 'Enter the 6-digit code sent to your phone.');
-      return;
-    }
-    setLoading(true);
-    const { error } = await supabase.auth.verifyOtp({ phone, token: otp, type: 'sms' });
-    setLoading(false);
-    if (error) Alert.alert('Verification failed', error.message);
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const timer = setTimeout(() => setResendIn(n => n - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendIn]);
+
+  const verify = async (token: string) => {
+    setVerifying(true);
+    setError(null);
+    const { error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' });
+    setVerifying(false);
+    if (error) setError(verifyCodeErrorMessage(error));
+    // On success the auth layout moves on to the app.
   };
 
-  const handleResend = async () => {
-    setResending(true);
+  const changeCode = (value: string) => {
+    setCode(value);
+    setError(null);
+    if (value.length === 6 && !verifying) verify(value);
+  };
+
+  const resend = async () => {
+    setNotice(null);
+    setError(null);
     const { error } = await supabase.auth.signInWithOtp({ phone });
-    setResending(false);
-    if (error) Alert.alert('Error', error.message);
-    else { Alert.alert('Code sent', 'A new verification code has been sent.'); setOtp(''); }
+    if (error) {
+      setError(sendCodeErrorMessage(error));
+      return;
+    }
+    setCode('');
+    setResendIn(RESEND_WAIT_SECONDS);
+    setNotice('We sent a new code.');
   };
 
   return (
-    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      {/* Hero */}
-      <View style={styles.hero}>
-        <View style={styles.iconBox}>
-          <Text style={styles.iconText}>💬</Text>
+    <KeyboardAvoidingView style={s.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView contentContainerStyle={[s.content, { paddingTop: insets.top + 12 }]} keyboardShouldPersistTaps="handled">
+        <Pressable onPress={() => router.back()} style={s.back} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to phone number">
+          <BackIcon size={20} color={colors.brand} />
+          <Text style={s.backText}>Phone</Text>
+        </Pressable>
+        <Text style={s.title} accessibilityRole="header">Enter the code</Text>
+        <Text style={s.body}>Sent to {maskPhone(phone ?? '', COUNTRIES.find(c => c.code === country))}.</Text>
+
+        <View style={s.field}>
+          <CodeField value={code} onChangeText={changeCode} error={error} disabled={verifying} />
         </View>
-        <Text style={styles.heroTitle}>Check your messages</Text>
-        <Text style={styles.heroSub}>Code sent to {phone}</Text>
-      </View>
+        {!!notice && <Banner tone="notice" message={notice} style={s.banner} />}
+        {verifying && <Button label="Signing in" loading loadingLabel="Signing in" size="main" style={s.banner} />}
 
-      {/* Form card */}
-      <View style={styles.card}>
-        <TouchableOpacity style={styles.back} onPress={() => router.back()}>
-          <Text style={styles.backText}>← Change number</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.cardTitle}>Enter the 6-digit code</Text>
-
-        <TextInput
-          style={styles.otpInput}
-          value={otp}
-          onChangeText={(t) => setOtp(t.replace(/\D/g, '').slice(0, 6))}
-          placeholder="000000"
-          placeholderTextColor={colors.textMuted}
-          keyboardType="number-pad"
-          maxLength={6}
-          autoFocus
-          textAlign="center"
-        />
-
-        <PressableScale
-          style={[styles.button, (loading || otp.length < 6) && styles.buttonDisabled]}
-          onPress={handleVerify}
-          disabled={loading || otp.length < 6}
-        >
-          {loading
-            ? <ActivityIndicator color={colors.onBrand} />
-            : <Text style={styles.buttonText}>Verify & Sign In</Text>}
-        </PressableScale>
-
-        <PressableScale style={styles.resend} onPress={handleResend} disabled={resending}>
-          {resending
-            ? <ActivityIndicator color={colors.brand} size="small" />
-            : <Text style={styles.resendText}>Didn't receive it? Resend code</Text>}
-        </PressableScale>
-      </View>
+        <View style={s.links}>
+          <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button">
+            <Text style={s.link}>Wrong number?</Text>
+          </Pressable>
+          {resendIn > 0 ? (
+            <Text style={s.countdown}>Resend in {formatCountdown(resendIn)}</Text>
+          ) : (
+            <Pressable onPress={resend} hitSlop={8} accessibilityRole="button">
+              <Text style={s.link}>Resend code</Text>
+            </Pressable>
+          )}
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-const useStyles = themedStyles((c, sh) => ({
-  root: { flex: 1, backgroundColor: c.field },
-
-  hero: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: 24,
-  },
-  iconBox: {
-    width: 72,
-    height: 72,
-    borderRadius: radius.card,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  iconText: { fontSize: 36 },
-  heroTitle: { fontSize: 22, fontFamily: font.headingBold, color: '#fff', marginBottom: 6 },
-  heroSub: { fontSize: 14, color: 'rgba(255,255,255,0.75)' },
-
-  card: {
-    backgroundColor: c.surface,
-    borderTopLeftRadius: radius.sheet,
-    borderTopRightRadius: radius.sheet,
-    padding: 28,
-    paddingBottom: 48,
-    ...sh.e2,
-  },
-  back: { marginBottom: 20 },
-  backText: { fontSize: 14, color: c.brand, fontWeight: '500' },
-  cardTitle: { fontSize: 20, fontFamily: font.headingBold, color: c.text, marginBottom: 20 },
-
-  otpInput: {
-    borderWidth: 2,
-    borderColor: c.brand,
-    borderRadius: radius.control,
-    paddingVertical: 18,
-    fontSize: 32,
-    fontFamily: font.mono,
-    letterSpacing: 12,
-    color: c.text,
-    backgroundColor: c.brandTint,
-    marginBottom: 24,
-  },
-
-  button: {
-    backgroundColor: c.brand,
-    borderRadius: radius.control,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  buttonDisabled: { opacity: 0.5 },
-  buttonText: { color: c.onBrand, fontSize: 16, fontWeight: '700' },
-
-  resend: { alignItems: 'center', paddingVertical: 10 },
-  resendText: { color: c.brand, fontSize: 14, fontWeight: '500' },
+const useStyles = themedStyles((c) => ({
+  root: { flex: 1, backgroundColor: c.bg },
+  content: { paddingHorizontal: 20, paddingBottom: 32 },
+  back: { flexDirection: 'row', alignItems: 'center', gap: 2, alignSelf: 'flex-start', marginLeft: -4 },
+  backText: { fontSize: 16, fontWeight: '600', color: c.brand },
+  title: { fontFamily: font.heading, fontSize: 30, lineHeight: 34, letterSpacing: -0.6, color: c.text, marginTop: 16 },
+  body: { fontSize: 16, lineHeight: 23, color: c.textSecondary, marginTop: 8 },
+  field: { marginTop: 24 },
+  banner: { marginTop: 16 },
+  links: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 },
+  link: { fontSize: 15, fontWeight: '600', color: c.brand },
+  countdown: { fontFamily: font.monoMedium, fontSize: 13, color: c.textMuted },
 }));

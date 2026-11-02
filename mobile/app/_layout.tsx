@@ -10,6 +10,8 @@ import { OverpassMono_500Medium } from '@expo-google-fonts/overpass-mono/500Medi
 import { OverpassMono_600SemiBold } from '@expo-google-fonts/overpass-mono/600SemiBold';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { NotificationResponder } from '@/components/NotificationResponder';
+import { ToastProvider } from '@/components/Toast';
 import { useTheme } from '@/lib/theme';
 
 // Keep the splash screen up until the fonts are ready, so text doesn't jump.
@@ -36,7 +38,10 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <StatusBar style="auto" />
       <AuthProvider>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
+        <ToastProvider>
+          <NotificationResponder />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
+        </ToastProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

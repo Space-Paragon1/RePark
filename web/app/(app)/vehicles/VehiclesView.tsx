@@ -2,26 +2,32 @@
 
 import { useState } from 'react';
 import { ApiError, vehiclesApi, type Vehicle, type VehicleCreate } from '@/lib/api';
-import { formatDateTime } from '@/lib/labels';
+import { claimStatus, formatDate } from '@/lib/labels';
+import { plateForSubmit } from '@/lib/plate';
+import { Car, MapPin, Plus, Trash2 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { SkeletonRows } from '@/components/Skeleton';
+import { Plate, PlateInput } from '@/components/Plate';
 import { useLoad } from '@/lib/useLoad';
 import {
-  Badge, Button, Card, EmptyState, ErrorBanner, Field, PageHeader, Spinner, inputClass,
+  Banner, Button, Card, Chip, EmptyState, ErrorBanner, Field, ListError, PageHeader, inputClass, textareaClass,
 } from '@/components/ui';
 
-const EMPTY_FORM: VehicleCreate = { plate_number: '', make: '', model: '', color: '', parking_zone: null };
+const MAX_VEHICLES = 10;
 
-const CLAIM_TONE = { pending: 'amber', approved: 'green', rejected: 'neutral' } as const;
+const EMPTY_FORM: VehicleCreate = { plate_number: '', make: '', model: '', color: '', parking_zone: null };
 
 export function VehiclesView() {
   const vehicles = useLoad(vehiclesApi.list);
   const claims = useLoad(vehiclesApi.listClaims);
+  const atLimit = (vehicles.data?.length ?? 0) >= MAX_VEHICLES;
   const [adding, setAdding] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<Vehicle | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const remove = async (vehicle: Vehicle) => {
-    if (!window.confirm(`Remove ${vehicle.plate_number}? You’ll stop getting alerts for it.`)) return;
-    setDeletingId(vehicle.id);
+    setDeleting(true);
     setError(null);
     try {
       await vehiclesApi.delete(vehicle.id);
@@ -29,18 +35,31 @@ export function VehiclesView() {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Couldn’t remove the vehicle.');
     } finally {
-      setDeletingId(null);
+      setDeleting(false);
+      setRemoving(null);
     }
   };
 
   return (
     <>
       <PageHeader
-        title="My vehicles"
-        subtitle="You’ll be alerted when someone reports one of these plates."
-        action={!adding && <Button onClick={() => setAdding(true)}>Add vehicle</Button>}
+        title="Vehicles"
+        subtitle={
+          vehicles.data
+            ? `${vehicles.data.length} of ${MAX_VEHICLES} · You’ll be alerted when someone reports one of these plates.`
+            : 'You’ll be alerted when someone reports one of these plates.'
+        }
+        action={!adding && !!vehicles.data?.length && (
+          <Button icon={Plus} onClick={() => setAdding(true)} disabled={atLimit}>Add a vehicle</Button>
+        )}
       />
-      <ErrorBanner message={error ?? vehicles.error} />
+      <ErrorBanner message={error} />
+      {vehicles.error && !vehicles.data && <ListError list="vehicles" onRetry={vehicles.reload} />}
+      {atLimit && (
+        <Banner tone="notice" className="mb-6">
+          You’ve added 10 vehicles, the most one account can have. Remove one to add another.
+        </Banner>
+      )}
 
       {adding && (
         <AddVehicleForm
@@ -56,12 +75,13 @@ export function VehiclesView() {
         />
       )}
 
-      {vehicles.loading && <Spinner className="size-6 text-brand" />}
+      {vehicles.loading && <SkeletonRows card={false} />}
       {vehicles.data?.length === 0 && !adding && (
         <EmptyState
-          title="No vehicles yet"
-          body="Add your plate so people can let you know when your car is in the way. Alerts come by text if you don’t use the app."
-          action={<Button onClick={() => setAdding(true)}>Add your first vehicle</Button>}
+          icon={Car}
+          title="No vehicles"
+          body="Add your plate so people can reach you without knowing who you are."
+          action={<Button variant="secondary" icon={Plus} onClick={() => setAdding(true)}>Add a vehicle</Button>}
         />
       )}
 
@@ -70,21 +90,22 @@ export function VehiclesView() {
           <li key={vehicle.id}>
             <Card className="flex h-full items-start justify-between gap-4">
               <div>
-                <p className="inline-block rounded-md border-2 border-text px-2 py-0.5 font-mono text-lg font-bold tracking-wider">
-                  {vehicle.plate_number}
-                </p>
-                <p className="mt-3 font-medium">
+                <Plate plate={vehicle.plate_number} size="M" className="w-fit" />
+                <p className="mt-4 text-[17px] font-semibold">
                   {vehicle.color} {vehicle.make} {vehicle.model}
                 </p>
                 {vehicle.parking_zone && (
-                  <p className="text-sm text-text-secondary">Usually parked: {vehicle.parking_zone}</p>
+                  <p className="mt-1 flex items-center gap-1.5 text-sm text-text-secondary">
+                    <MapPin className="size-4 shrink-0" aria-hidden />
+                    Usually {vehicle.parking_zone}
+                  </p>
                 )}
-                <p className="mt-1 text-xs text-text-muted">Added {formatDateTime(vehicle.created_at)}</p>
+                <p className="mt-2 font-mono text-xs font-medium text-text-muted">Added {formatDate(vehicle.created_at)}</p>
               </div>
               <Button
-                variant="danger"
-                onClick={() => remove(vehicle)}
-                loading={deletingId === vehicle.id}
+                variant="quietStop"
+                className="-mr-2 -mt-2 px-3"
+                onClick={() => setRemoving(vehicle)}
                 aria-label={`Remove ${vehicle.plate_number}`}
               >
                 Remove
@@ -104,19 +125,30 @@ export function VehiclesView() {
             {claims.data?.map(claim => (
               <li key={claim.id}>
                 <Card className="flex items-center justify-between gap-4 p-4">
-                  <div>
-                    <p className="font-semibold">{claim.plate_number}</p>
-                    <p className="text-sm text-text-secondary">Filed {formatDateTime(claim.created_at)}</p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Plate plate={claim.plate_number} />
+                    <p className="font-mono text-xs font-medium text-text-muted">Filed {formatDate(claim.created_at)}</p>
                   </div>
-                  <Badge tone={CLAIM_TONE[claim.status]}>
-                    {claim.status === 'pending' ? 'Under review' : claim.status === 'approved' ? 'Approved' : 'Not approved'}
-                  </Badge>
+                  <Chip status={claimStatus(claim)} />
                 </Card>
               </li>
             ))}
           </ul>
         </section>
       )}
+
+      <ConfirmDialog
+        open={!!removing}
+        icon={Trash2}
+        title={`Remove ${removing?.plate_number ?? ''}?`}
+        body="You’ll stop getting alerts for this car. People who report it will be told the owner isn’t on RePark."
+        confirmLabel="Remove vehicle"
+        confirmingLabel="Removing"
+        cancelLabel="Keep it"
+        busy={deleting}
+        onConfirm={() => removing && remove(removing)}
+        onCancel={() => setRemoving(null)}
+      />
     </>
   );
 }
@@ -143,7 +175,11 @@ function AddVehicleForm({ onCancel, onAdded, onClaimed }: {
     setSaving(true);
     setError(null);
     try {
-      onAdded(await vehiclesApi.create({ ...form, parking_zone: form.parking_zone || null }));
+      onAdded(await vehiclesApi.create({
+        ...form,
+        plate_number: plateForSubmit(form.plate_number),
+        parking_zone: form.parking_zone || null,
+      }));
     } catch (e) {
       if (e instanceof ApiError && e.code === 'plate_taken') {
         setPlateTaken(true);
@@ -160,7 +196,7 @@ function AddVehicleForm({ onCancel, onAdded, onClaimed }: {
     setError(null);
     try {
       await vehiclesApi.createClaim({
-        plate_number: form.plate_number,
+        plate_number: plateForSubmit(form.plate_number),
         make: form.make,
         model: form.model,
         color: form.color,
@@ -180,17 +216,18 @@ function AddVehicleForm({ onCancel, onAdded, onClaimed }: {
       <form onSubmit={save} className="space-y-4">
         <ErrorBanner message={error} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Plate number">
-            <input
-              className={`${inputClass} font-semibold uppercase tracking-wider`}
+          <div className="sm:col-span-2">
+            <label htmlFor="vehicle-plate" className="mb-1.5 block text-sm font-semibold">Plate</label>
+            <PlateInput
+              id="vehicle-plate"
               value={form.plate_number}
-              onChange={update('plate_number')}
-              placeholder="ABC 123"
-              maxLength={12}
-              required
+              onChange={plate => {
+                setForm(f => ({ ...f, plate_number: plate }));
+                setPlateTaken(false);
+              }}
               autoFocus
             />
-          </Field>
+          </div>
           <Field label="Colour">
             <input className={inputClass} value={form.color} onChange={update('color')} placeholder="Silver" required />
           </Field>
@@ -200,7 +237,7 @@ function AddVehicleForm({ onCancel, onAdded, onClaimed }: {
           <Field label="Model">
             <input className={inputClass} value={form.model} onChange={update('model')} placeholder="Camry" required />
           </Field>
-          <Field label="Where you usually park (optional)">
+          <Field label="Usually parked" optional hint="Only for you, to tell your cars apart.">
             <input
               className={inputClass}
               value={form.parking_zone ?? ''}
@@ -211,15 +248,15 @@ function AddVehicleForm({ onCancel, onAdded, onClaimed }: {
         </div>
 
         {plateTaken ? (
-          <div className="space-y-3 rounded-lg border border-signal/50 bg-signal-tint p-4">
-            <p className="font-semibold text-text">This plate is registered to another account</p>
+          <div className="space-y-3 rounded-control bg-signal-tint p-4">
+            <p className="font-semibold text-text">This plate is already registered to another account.</p>
             <p className="text-sm text-text-secondary">
-              If it’s your vehicle, file an ownership claim. We’ll review it, and if it’s approved the
-              plate moves to your account. The other account holder won’t see your details.
+              If it’s your car, you can file an ownership claim. We review it and let you know. The other
+              account isn’t told who you are.
             </p>
             <Field label="Anything that helps us review it (optional)">
               <textarea
-                className={`${inputClass} min-h-20`}
+                className={textareaClass}
                 value={note}
                 onChange={e => setNote(e.target.value)}
                 maxLength={500}
@@ -227,14 +264,16 @@ function AddVehicleForm({ onCancel, onAdded, onClaimed }: {
               />
             </Field>
             <div className="flex flex-wrap gap-3">
-              <Button type="button" onClick={fileClaim} loading={saving}>File ownership claim</Button>
-              <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
+              <Button type="button" onClick={fileClaim} loading={saving} loadingLabel="Filing">
+                File a claim for {plateForSubmit(form.plate_number)}
+              </Button>
+              <Button type="button" variant="quiet" onClick={onCancel}>Cancel</Button>
             </div>
           </div>
         ) : (
           <div className="flex flex-wrap gap-3">
-            <Button type="submit" loading={saving}>Add vehicle</Button>
-            <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
+            <Button type="submit" loading={saving} loadingLabel="Adding">Add</Button>
+            <Button type="button" variant="quiet" onClick={onCancel}>Cancel</Button>
           </div>
         )}
       </form>

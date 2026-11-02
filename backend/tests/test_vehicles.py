@@ -68,6 +68,7 @@ async def test_register_alerts_owner_about_recent_reports(client):
     mock_open.assert_awaited_once_with("report-1", "vehicle-1")
     mock_deliver.assert_awaited_once_with(
         "alert-9", FAKE_USER["sub"], "ABC123", "blocking_driveway", "report-1",
+        vehicle=FAKE_VEHICLE,
     )
 
 

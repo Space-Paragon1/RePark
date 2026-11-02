@@ -8,6 +8,8 @@ const overpass = Overpass({ variable: '--font-overpass', subsets: ['latin'] });
 const overpassMono = Overpass_Mono({ variable: '--font-overpass-mono', subsets: ['latin'] });
 
 export const metadata: Metadata = {
+  // Absolute URLs for the share image. Set NEXT_PUBLIC_SITE_URL if the site moves.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://re-park.vercel.app'),
   title: {
     default: 'RePark — ask a driver to move their car, privately',
     template: '%s · RePark',
